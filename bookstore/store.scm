@@ -13,7 +13,7 @@
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (ice-9 pretty-print)
-	     #:use-module (bookmunger utilities)
+	     #:use-module (bookstore utilities)
 	    
 	    ;; #:use-module (dbi dbi)
 	     )

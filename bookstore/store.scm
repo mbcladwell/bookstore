@@ -15,20 +15,22 @@
 	     #:use-module (ice-9 pretty-print)
 	     #:use-module (bookstore utilities)
 	    
-	    ;; #:use-module (dbi dbi)
+	      #:use-module (json)
+	     #:export (top)
 	     )
 
 (define book-count 0)
 
-(define top-dir "") 
-(define lib-dir "") ;; home of json and books
-(define lib-backup-dir "") ;;
+(define top-dir "") ;; home of json
+(define lib-dir "") ;; home of books
+(define backup-dir "") ;;
 (define deposit-dir "")  ;; out of manybooks ready to be processed
 (define dest-dir "") ;; final destination directory in urblib desk
 (define withdraw-dir "")  ;;for books to read
 
 (define doc-viewer "ebook-viewer") ;;from Calibre
-(define lib-file-name "book.db")
+(define lib-file-name "book.json")
+(define config-file-name (string-append (getenv "HOME") "/.config/bookstore/config.json"))
 
 (define db-obj #f)
 
@@ -347,18 +349,22 @@ SELECT DISTINCT book.id, book.title FROM book, author, tag, book_author, book_ta
 
 
 
-(define (set-vars args)
+(define (set-vars)
   ;;arg should be a list of top level e.g. /home/mbc/temp/lib  no trailing slash
   ;;first element is file name
-  (begin 
-    (set! top-dir (cadr args))
-    (set! lib-dir (string-append top-dir "/db/")) ;; home of db
-    (set! lib-backup-dir (string-append top-dir "/backups/"))
-    (set! deposit-dir (string-append top-dir "/deposit/"))  ;; out of z-lib ready to be processed
-    (set! dest-dir (string-append top-dir "/files/")) ;; final destination directory probably ~/syncd/library/files
-    (set! readme-dir (string-append top-dir "/readme/"))
-    (set! db-obj (dbi-open "sqlite3" (string-append lib-dir lib-file-name))))
-   #t)
+  (let* ((p  (open-input-file config-file-name))
+	 (all-vars (json->scm p)))
+          (begin
+	    (set! top-dir (assoc-ref all-vars "top-dir" ))
+	    (set! lib-dir (assoc-ref all-vars "lib-dir" )) ;; home of db
+	    (set! backup-dir (assoc-ref all-vars "backup-dir" ))
+	    (set! deposit-dir (assoc-ref all-vars "deposit-dir" ))  ;; out of z-lib ready to be processed
+	    (set! dest-dir (assoc-ref all-vars "dest-dir" )) ;; final destination directory probably ~/syncd/library/files
+	    (set! withdraw-dir (assoc-ref all-vars "withdraw-dir" )))
+		;;  (set! db-obj (dbi-open "sqlite3" (string-append lib-dir lib-file-name))))		                                                         )
+	 ))
+  
+  
 
 
 (define (process-deposit)
@@ -406,28 +412,40 @@ SELECT DISTINCT book.id, book.title FROM book, author, tag, book_author, book_ta
 
 
 
+(define (top)
+ (let* (
+	(dummy (activate-readline))
+	(dummy (set-vars))
+	)
+       (pretty-print  backup-dir)
 
-(define (top args)
-  (let* (
-	 (dummy (activate-readline))
-	 (result (if (null? (cdr args)) 3
-		     (if (string= (cadr args) "init") 1
-			 (if (access? (string-append (cadr args) "/db/" lib-file-name) F_OK) 2 3)))))
-        (cond ((= result 1) (let* ((desired-dir (readline "\nEnter top level directory: "))
-					  (dir-exists? (access? (string-append desired-dir "/db/" lib-file-name) F_OK)))
-				     (if dir-exists?
-					 (display  (string-append "Library: " desired-dir "/db/" lib-file-name " already exists!\n\n"))
-					 (init-library desired-dir))))				     		     
-		     ( (= result 2) (let* (
-					   (dummy (set-vars args))
-					   (dummy (display-logo))
-					   (dummy (display-main-menu))
-					   (selection (readline "Selection: ")))
-				      (cond ((string= selection "1") (query-an-item))
-					    ((string= selection "2") (process-deposit))
-					    ((string= selection "3") (add-tag))
-					    ((string= selection "4") (add-suffix)))))					   		       
-		     ((= result 3) (display "\nInvalid argument to bookmunger.sh\nArgument should be either \"init\" or a valid library directory e.g. \"/home/myhome/library\"\n\n")))))
+   ;;(if config-exists? (main-menu) (init-library))
+
+   ))
+
+
+;; (define (top args)
+;;   (let* (
+;; 	 (dummy (activate-readline))
+;; 	 (result (if (null? (cdr args)) 3
+;; 		     (if (string= (cadr args) "init") 1
+;; 			 (if (access? (string-append (cadr args) "/db/" lib-file-name) F_OK) 2 3)))))
+;;     (cond ((= result 1) (let* ((desired-dir (readline "\nEnter top level directory: "))
+;; 			       (dir-exists? (access? (string-append desired-dir "/db/" lib-file-name) F_OK)))
+;; 			  (if dir-exists?
+;; 			      (display  (string-append "Library: " desired-dir "/db/" lib-file-name " already exists!\n\n"))
+;; 			      (init-library desired-dir))))				     		     
+;; 	  ( (= result 2) (let* (
+;; 				(dummy (set-vars args))
+;; 				(dummy (display-logo))
+;; 				(dummy (display-main-menu))
+;; 				(selection (readline "Selection: ")))
+;; 			   (cond ((string= selection "1") (query-an-item))
+;; 				 ((string= selection "2") (process-deposit))
+;; 				 ((string= selection "3") (add-tag))
+;; 				 ((string= selection "4") (add-suffix)))))					   		       
+;; 	  ((= result 3) (display "\nInvalid argument to bookmunger.sh\nArgument should be either \"init\" or a valid library directory e.g. \"/home/myhome/library\"\n\n")))))
+
 
 
 

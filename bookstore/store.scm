@@ -1,5 +1,4 @@
-(define-module (bookstore store)
-  
+(define-module (bookstore store) 
 	     #:use-module (srfi srfi-19)   ;; date time
 	     #:use-module (srfi srfi-1)  ;;list searching; delete-duplicates in list 
 	     #:use-module (ice-9 rdelim)
@@ -12,10 +11,11 @@
 	     #:use-module (ice-9 textual-ports)
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
-	     #:use-module (ice-9 pretty-print)
-	     #:use-module (bookstore utilities)
-	    
-	      #:use-module (json)
+	     #:use-module (json)
+	     #:use-module (bookstore init)
+	     #:use-module (bookstore suffixes)
+	     #:use-module (bookstore db)
+	     #:use-module (bookstore utilities)	     
 	     #:export (top)
 	     )
 
@@ -23,6 +23,7 @@
 
 (define top-dir "") ;; home of json
 (define lib-dir "") ;; home of books
+(define db-dir "") ;; home of books
 (define backup-dir "") ;;
 (define deposit-dir "")  ;; out of manybooks ready to be processed
 (define dest-dir "") ;; final destination directory in urblib desk
@@ -30,19 +31,25 @@
 
 (define doc-viewer "ebook-viewer") ;;from Calibre
 (define lib-file-name "book.json")
-(define config-file-name (string-append (getenv "HOME") "/.config/bookstore/config.json"))
 
 (define db-obj #f)
 
-
-
-(define (move-file old new)
-  (let* ((old-fname (string-append deposit-dir old))
-	 (new-fname (string-append dest-dir new))
-	 (command (string-append "mv '" old-fname "' '" new-fname"'")))
-   (system command )))
-
-
+(define (set-vars)
+  ;;arg should be a list of top level e.g. /home/mbc/temp/lib  no trailing slash
+  ;;first element is file name
+  (let* ((p  (open-input-file config-file-name))
+	 (all-vars (json->scm p)))
+          (begin
+	    (set! top-dir (assoc-ref all-vars "top-dir" ))
+	    (set! lib-dir (assoc-ref all-vars "lib-dir" )) ;; home of db
+	    (set! db-dir (assoc-ref all-vars "db-dir" )) ;; home of book.json
+	    (set! backup-dir (assoc-ref all-vars "backup-dir" ))
+	    (set! deposit-dir (assoc-ref all-vars "deposit-dir" ))  ;; out of z-lib ready to be processed
+	    (set! dest-dir (assoc-ref all-vars "dest-dir" )) ;; final destination directory probably ~/syncd/library/files
+	    (set! withdraw-dir (assoc-ref all-vars "withdraw-dir" )))
+		;;  (set! db-obj (dbi-open "sqlite3" (string-append lib-dir lib-file-name))))		                                                         )
+	 ))
+  
 
 (define (recurse-get-auth-ids auths ids)
   ;;recurse for get-auth-ids
@@ -71,19 +78,6 @@
 ;; (recurse-get-auth-ids '("Howard Rheingold" "Joe Blow") '())
 
 
-(define (get-author-ids arg)
-  ;;for a string of , delimitted authors get the ids
-  ;;all authors must be First M. Last before getting here
-  ;;add to database if needed
-  (let*((trimmed (string-trim-both arg))
-	(auth-lst (string-split trimmed #\,))
-	(trimmed-auth-lst (map string-trim-both auth-lst))
-	)
-   ;; trimmed-auth-lst))
-    (recurse-get-auth-ids trimmed-auth-lst '())))
-
-
-;;(get-author-ids "Howard Rheingold, Joe Blow")
 
 (define (get-authors-as-string lst str)
   ;; input is the processed list from get-authors-as-list
@@ -107,116 +101,6 @@
 ;; last, first
 ;; last, first and last, first
 ;;  
-
-(define (get-authors-as-list str)
-  ;;input is a string that may have multiple authors
-  ;;output is a list with each element as first (m) last
-  (let* (
-	(str (string-trim-both str))
-	(len-str (string-length str))
-	;;if has and then split and check if has comma and reverse
-	(and-start (string-contains-ci str " and "))
-	(auth-lst (if and-start
-		      (let* (
-			     (str (string-trim-both str))
-			     (len-str (string-length str))
-			     (auth1 (substring str 0 and-start))
-			     (auth2 (substring str (+ and-start 5) len-str))
-			     ;;if auth1 has a comma it is last, first - reverse
-			     (has-comma? (> (length (string-split auth1 #\,)) 1)))
-			(if has-comma?
-			    (let* ((auth1-split (string-split auth1 #\,))
-			     	   (auth1-lname (car auth1-split))
-			      	   (auth1-fname (string-trim-both (cadr auth1-split)))
-			      	   (auth2-split (string-split auth2 #\,))
-			      	   (auth2-lname (car auth2-split))
-			      	   (auth2-fname (string-trim-both (cadr auth2-split)))
-			      	   (auth1rev (string-append auth1-fname " " auth1-lname))
-			      	   (auth2rev (string-append auth2-fname " " auth2-lname)))
-			      (list auth1rev auth2rev))
-			    (list auth1 auth2)))			     
-		      ;; no and
-		      (let*(
-			     (auth-str (string-split str #\,))
-			     (auth-str (map string-trim-both auth-str))
-			     (has-space? (> (length (string-split (car auth-str) #\space)) 1)))
-			;;if it has a space than it is first last, otherwise last, first
-			;;if last first must flip			    
-			(if has-space? auth-str (list (string-append (cadr auth-str) " " (car auth-str))))))))	
-     auth-lst))
-
-;;(get-authors-as-list "Smith, Joe M. and Blow, Bill")
-
-
-
-
-(define (get-title-authors-filename str)
-  ;; return a list '(title '(authors) new-file-name)
-  ;; last "by" is the delimiter of title author
-  (let* ((len (length (string->list str)))
-	 (dot (string-rindex str #\.)) ;;reverse search
-	 (pref (substring str 0  dot ))
-	 (len-pref (length (string->list pref)))	 
-	 (ext (substring str dot len)) ;; includes .
-	 (all-suffixes (get-all-suffixes-as-list))
-	 (pref (recurse-remove-suffix all-suffixes pref))
-	 (b (last (list-matches " by " pref)))
-	 (start (match:start  b))
-	 (end (match:end  b))
-	 (len-pref (length (string->list pref)));;it might have changed
-	 (title (substring pref 0 start))
-	 (authors (substring pref end len-pref))
-	  (auth-lst (get-authors-as-list authors)) ;;gets a list '("Fname1 Lname1" "Fname2 Lname2")
-	  (new-file-name (string-append title ext))
-	 )
- ;;pref))
-    
-  `(,title ,auth-lst ,new-file-name) ))
-
-;;(get-title-authors-filename "A Biologists Guide to Mathematical Modeling in Ecology and Evolution by Sarah P. Otto, Troy Day.epub")
-
-
-
-(define (add-auths-to-book book-id auth-ids)
-  ;;book-id is integer
-  ;;auth-ids is list of integers
-  (if (null? (cdr auth-ids))
-      (dbi-query db-obj (string-append "insert into book_author ('book_id','author_id') values(" (number->string book-id) "," (number->string (car auth-ids))  ")"))
-      (begin
-	(dbi-query db-obj (string-append "insert into book_author ('book_id','author_id') values(" (number->string book-id) "," (number->string  (car auth-ids))  ")"))
-	(add-auths-to-book book-id (cdr auth-ids)))))
-
-
-(define (add-tags-to-book book-id tag-ids)
-  ;;book-id is integer
-  ;;tag-ids is list of integers as strings
-  (if (null? (cdr tag-ids))
-      (dbi-query db-obj (string-append "insert into book_tag ('book_id','tag_id') values(" (number->string book-id) ",'"  (car tag-ids)  "')"))
-      (begin
-	(dbi-query db-obj (string-append "insert into book_tag ('book_id','tag_id') values(" (number->string book-id) ",'"  (car tag-ids)  "')"))
-	(add-tags-to-book book-id (cdr tag-ids)))))
-  
-
-(define (add-book-to-db title auth-ids tag-ids filename)
-  ;;authors and tags must already be in db for assigment with ids
-  (let* ((a (dbi-query db-obj (string-append "insert into book ('title','file_name') values('" title "','" filename "')")))
-	 (b (dbi-query db-obj (string-append "select id from book where title LIKE '" title "'")))
-	 (book-id (assoc-ref (dbi-get_row db-obj) "id"))
-	 (c (add-auths-to-book book-id  auth-ids))
-	 (d (add-tags-to-book book-id (string-split (car tag-ids) #\space)))
-	 )
-  book-id  ))
-
-
-(define (make-lib-backup)
- ;;lib-dir "/home/mbc/temp/lib/" ;; home of library XML
- ;;lib-backup-dir "/home/mbc/temp/lib/backups/" ;;
- ;;lib-file-name "a-lib.reflib"
-  (let*((pref (date->string  (current-date) "~Y~m~d~I~M"))
-	(backup-file-name (string-append lib-backup-dir pref "-" lib-file-name ))
-	(working-file-name (string-append lib-dir lib-file-name))
-	(command (string-append "cp " working-file-name " " backup-file-name)))
-    (system command)))
 
 
 (define (get-all-books-as-string lst out)
@@ -349,22 +233,6 @@ SELECT DISTINCT book.id, book.title FROM book, author, tag, book_author, book_ta
 
 
 
-(define (set-vars)
-  ;;arg should be a list of top level e.g. /home/mbc/temp/lib  no trailing slash
-  ;;first element is file name
-  (let* ((p  (open-input-file config-file-name))
-	 (all-vars (json->scm p)))
-          (begin
-	    (set! top-dir (assoc-ref all-vars "top-dir" ))
-	    (set! lib-dir (assoc-ref all-vars "lib-dir" )) ;; home of db
-	    (set! backup-dir (assoc-ref all-vars "backup-dir" ))
-	    (set! deposit-dir (assoc-ref all-vars "deposit-dir" ))  ;; out of z-lib ready to be processed
-	    (set! dest-dir (assoc-ref all-vars "dest-dir" )) ;; final destination directory probably ~/syncd/library/files
-	    (set! withdraw-dir (assoc-ref all-vars "withdraw-dir" )))
-		;;  (set! db-obj (dbi-open "sqlite3" (string-append lib-dir lib-file-name))))		                                                         )
-	 ))
-  
-  
 
 
 (define (process-deposit)
@@ -416,8 +284,10 @@ SELECT DISTINCT book.id, book.title FROM book, author, tag, book_author, book_ta
  (let* (
 	(dummy (activate-readline))
 	(dummy (set-vars))
+	(dummy (display-main-menu))
+ 	(selection (readline "Selection: "))
 	)
-       (pretty-print  backup-dir)
+       (pretty-print  top-dir)
 
    ;;(if config-exists? (main-menu) (init-library))
 

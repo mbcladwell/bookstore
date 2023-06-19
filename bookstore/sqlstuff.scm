@@ -45,3 +45,94 @@
 	 (d (add-tags-to-book book-id (string-split (car tag-ids) #\space)))
 	 )
   book-id  ))
+
+
+(define (add-tag)
+  (let* ((str  (readline "Tag: "))
+	 (a (dbi-query db-obj (string-append "insert into tag ('tag_name') values('" str "')")))
+	 (b (dbi-query db-obj (string-append "select id from tag where tag_name LIKE '" str "'")))
+	 (tag-id (assoc-ref (dbi-get_row db-obj) "id")))
+   (display (string-append "\nTag: " str " with id: " (number->string tag-id) " added to database.\n" ))))
+
+(define (add-suffix)
+  (let* ((str  (readline "Suffix: "))
+	 (a (dbi-query db-obj (string-append "insert into suffix ('suffix_name') values('" str "')")))
+	 (b (dbi-query db-obj (string-append "select id from suffix where suffix_name LIKE '" str "'")))
+	 (suffix-id (assoc-ref (dbi-get_row db-obj) "id")))
+   (display (string-append "\nSuffix: " str " with id: " (number->string suffix-id) " added to database.\n" ))))
+
+(define (recurse-get-auth-ids auths ids)
+  ;;recurse for get-auth-ids
+  ;;first check if author already in db, create if not
+  (if (null? (cdr auths))
+      (let* ((a (dbi-query db-obj (string-append "select id from author where author_name LIKE '" (car auths) "'")))
+	     (b (dbi-get_row db-obj))
+	     (c (if b (assoc-ref b "id")
+		    (begin
+		      (dbi-query db-obj (string-append "insert into author ('author_name') values('"  (car auths) "')"))
+		      (dbi-query db-obj (string-append "select id from author where author_name LIKE '" (car auths) "'"))
+		      (assoc-ref (dbi-get_row db-obj) "id"))))
+	     (dummy (set! ids (cons c ids))))
+	ids)
+       (let* ((a (dbi-query db-obj (string-append "select id from author where author_name LIKE '" (car auths) "'")))
+	     (b (dbi-get_row db-obj))
+	     (c (if b (assoc-ref b "id")
+		    (begin
+		      (dbi-query db-obj (string-append "insert into author ('author_name') values('"  (car auths) "')"))
+		      (dbi-query db-obj (string-append "select id from author where author_name LIKE '" (car auths) "'"))
+		      (assoc-ref (dbi-get_row db-obj) "id"))))
+	     (dummy (set! ids (cons c ids))))
+	(recurse-get-auth-ids (cdr auths) ids))))
+
+
+;; (recurse-get-auth-ids '("Howard Rheingold" "Joe Blow") '())
+
+
+(define (copy-book-to-readme book-id)
+  ;;book-id is integer
+  (let*((dummy (dbi-query db-obj (string-append "SELECT book.file_name FROM book WHERE  book.id = '" (number->string book-id) "'")))
+	(ret (dbi-get_row db-obj))
+	(file-name (assoc-ref ret "file_name"))
+	(lib-file-name (string-append dest-dir file-name ))	
+	(readme-file-name (string-append readme-dir file-name ))
+	(command (string-append "cp '" lib-file-name "' '" readme-file-name "'")))
+    (system command)))
+
+(define (view-book book-id)
+  ;;viewing the book in the library (dest-dir)
+  (let*((dummy (dbi-query db-obj (string-append "SELECT book.file_name FROM book WHERE  book.id = '" (number->string book-id) "'")))
+	(ret (dbi-get_row db-obj))
+	(file-name (assoc-ref ret "file_name"))
+	(lib-file-name (string-append dest-dir file-name ))	
+	(command (string-append doc-viewer " '" lib-file-name "'")))
+    (system command)))
+
+(define (get-all-suffixes-as-list)
+  ;;input to create-tagwin
+  (let* ((a   (dbi-query db-obj "SELECT suffix_name FROM suffix")  )
+	 (b '())
+	 (ret (dbi-get_row db-obj))
+	 (dummy (while (not (equal? ret #f))
+		  (begin
+		    (set! b (cons (assoc-ref ret "suffix_name") b))
+		    (set! ret (dbi-get_row db-obj))))))
+     b))
+
+
+(define (get-all-tags-as-list)
+  ;;input to create-tagwin
+  (let* ( (a   (dbi-query db-obj "SELECT * FROM tag")  )
+	  (b "")
+	  (c '(""))
+	  (counter 0)
+	  (ret (dbi-get_row db-obj))
+	  (dummy (while (not (equal? ret #f))
+		   (begin
+		     (set! counter (+ counter 1))
+		     (set! b (string-append b  (number->string (assoc-ref ret "id")) ":" (assoc-ref ret "tag_name") "  "))
+		     (if (= 0 (euclidean-remainder counter 8))
+			 (begin
+			   (set! c (cons b c))
+			   (set! b "")) #t)		 
+		     (set! ret (dbi-get_row db-obj))))))
+	  (reverse (cons "" (cons b c)) )))  ;;add the last few, then add "" because the while won't process the last element i.e. not recursion

@@ -13,26 +13,30 @@
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (json)
 	     #:use-module (bookstore init)
-	     #:use-module (bookstore suffixes)
+	     #:use-module (bookstore suffix)
 	     #:use-module (bookstore db)
 	     #:use-module (bookstore utilities)	     
+	     #:use-module (bookstore tags)	     
 	     #:export (top)
+	     #:export (init-library)
+	     
 	     )
 
 (define book-count 0)
 
-(define top-dir "") ;; home of json
+(define top-dir "") ;; top level directory - results of the input by user
 (define lib-dir "") ;; home of books
-(define db-dir "") ;; home of books
-(define backup-dir "") ;;
-(define deposit-dir "")  ;; out of manybooks ready to be processed
+(define db-dir "") ;; home of all jsons
+(define backup-dir "") ;; backup of all jsons
+(define deposit-dir "")  ;;  ready to be processed 1. rename to hash
+                                                 ;;2. move to lib-dir
+                                                 ;;3. update jsons
 (define dest-dir "") ;; final destination directory in urblib desk
-(define withdraw-dir "")  ;;for books to read
-
+(define withdraw-dir "")  ;;for books to read - link to ereader
 (define doc-viewer "ebook-viewer") ;;from Calibre
 (define lib-file-name "book.json")
+(define config-file-name "config.json")
 
-(define db-obj #f)
 
 (define (set-vars)
   ;;arg should be a list of top level e.g. /home/mbc/temp/lib  no trailing slash
@@ -49,49 +53,6 @@
 	    (set! withdraw-dir (assoc-ref all-vars "withdraw-dir" )))
 		;;  (set! db-obj (dbi-open "sqlite3" (string-append lib-dir lib-file-name))))		                                                         )
 	 ))
-  
-
-(define (recurse-get-auth-ids auths ids)
-  ;;recurse for get-auth-ids
-  ;;first check if author already in db, create if not
-  (if (null? (cdr auths))
-      (let* ((a (dbi-query db-obj (string-append "select id from author where author_name LIKE '" (car auths) "'")))
-	     (b (dbi-get_row db-obj))
-	     (c (if b (assoc-ref b "id")
-		    (begin
-		      (dbi-query db-obj (string-append "insert into author ('author_name') values('"  (car auths) "')"))
-		      (dbi-query db-obj (string-append "select id from author where author_name LIKE '" (car auths) "'"))
-		      (assoc-ref (dbi-get_row db-obj) "id"))))
-	     (dummy (set! ids (cons c ids))))
-	ids)
-       (let* ((a (dbi-query db-obj (string-append "select id from author where author_name LIKE '" (car auths) "'")))
-	     (b (dbi-get_row db-obj))
-	     (c (if b (assoc-ref b "id")
-		    (begin
-		      (dbi-query db-obj (string-append "insert into author ('author_name') values('"  (car auths) "')"))
-		      (dbi-query db-obj (string-append "select id from author where author_name LIKE '" (car auths) "'"))
-		      (assoc-ref (dbi-get_row db-obj) "id"))))
-	     (dummy (set! ids (cons c ids))))
-	(recurse-get-auth-ids (cdr auths) ids))))
-
-
-;; (recurse-get-auth-ids '("Howard Rheingold" "Joe Blow") '())
-
-
-
-(define (get-authors-as-string lst str)
-  ;; input is the processed list from get-authors-as-list
-  ;; str should be ""
-  ;;output is a single string for display or input into get-author-ids
-  ;;use the list of authors for adding to database
-  (if (null? (cdr lst))
-      (begin
-	(set! str (string-append str (car lst) ))
-	str)       
-       (begin
-	 (set! str (string-append str (car lst) ", " ))
-	 (get-authors-as-string (cdr lst) str))))
-
 
 ;;will handle the following author spellings
 ;; first last
@@ -113,37 +74,6 @@
 	(get-all-books-as-string (cdr lst) out))))
 
 
-
-
-(define (get-all-tags-as-list)
-  ;;input to create-tagwin
-  (let* ( (a   (dbi-query db-obj "SELECT * FROM tag")  )
-	  (b "")
-	  (c '(""))
-	  (counter 0)
-	  (ret (dbi-get_row db-obj))
-	  (dummy (while (not (equal? ret #f))
-		   (begin
-		     (set! counter (+ counter 1))
-		     (set! b (string-append b  (number->string (assoc-ref ret "id")) ":" (assoc-ref ret "tag_name") "  "))
-		     (if (= 0 (euclidean-remainder counter 8))
-			 (begin
-			   (set! c (cons b c))
-			   (set! b "")) #t)		 
-		     (set! ret (dbi-get_row db-obj))))))
-	  (reverse (cons "" (cons b c)) )))  ;;add the last few, then add "" because the while won't process the last element i.e. not recursion
-
-(define (get-all-tags-as-string)
-  (let* ((sep "========================================================================================================\n")
-	 (lst (cdr (get-all-tags-as-list)))
-	 (out sep)
-	 (dummy (while (not (string= (car lst) "") )		  
-		  (begin
-		    (set! out (string-append out "\n" (car lst)))
-		    (set! lst (cdr lst))
-		    ))))
-    (string-append "\n\n" out "\n\n" sep "\n")))
-	      
 
 (define (process-file f)
   (let* ((old-fname f)
@@ -211,28 +141,6 @@ SELECT DISTINCT book.id, book.title FROM book, author, tag, book_author, book_ta
       
 	))
 
-(define (copy-book-to-readme book-id)
-  ;;book-id is integer
-  (let*((dummy (dbi-query db-obj (string-append "SELECT book.file_name FROM book WHERE  book.id = '" (number->string book-id) "'")))
-	(ret (dbi-get_row db-obj))
-	(file-name (assoc-ref ret "file_name"))
-	(lib-file-name (string-append dest-dir file-name ))	
-	(readme-file-name (string-append readme-dir file-name ))
-	(command (string-append "cp '" lib-file-name "' '" readme-file-name "'")))
-    (system command)))
-
-(define (view-book book-id)
-  ;;viewing the book in the library (dest-dir)
-  (let*((dummy (dbi-query db-obj (string-append "SELECT book.file_name FROM book WHERE  book.id = '" (number->string book-id) "'")))
-	(ret (dbi-get_row db-obj))
-	(file-name (assoc-ref ret "file_name"))
-	(lib-file-name (string-append dest-dir file-name ))	
-	(command (string-append doc-viewer " '" lib-file-name "'")))
-    (system command)))
-
-
-
-
 
 
 (define (process-deposit)
@@ -264,19 +172,61 @@ SELECT DISTINCT book.id, book.title FROM book, author, tag, book_author, book_ta
 	       (c (if (string= action "r") (copy-book-to-readme id))))
 	  #t))))
   
-(define (add-tag)
-  (let* ((str  (readline "Tag: "))
-	 (a (dbi-query db-obj (string-append "insert into tag ('tag_name') values('" str "')")))
-	 (b (dbi-query db-obj (string-append "select id from tag where tag_name LIKE '" str "'")))
-	 (tag-id (assoc-ref (dbi-get_row db-obj) "id")))
-   (display (string-append "\nTag: " str " with id: " (number->string tag-id) " added to database.\n" ))))
 
-(define (add-suffix)
-  (let* ((str  (readline "Suffix: "))
-	 (a (dbi-query db-obj (string-append "insert into suffix ('suffix_name') values('" str "')")))
-	 (b (dbi-query db-obj (string-append "select id from suffix where suffix_name LIKE '" str "'")))
-	 (suffix-id (assoc-ref (dbi-get_row db-obj) "id")))
-   (display (string-append "\nSuffix: " str " with id: " (number->string suffix-id) " added to database.\n" ))))
+ (define (display-logo)
+   ;;https://patorjk.com/software/taag/#p=display&f=Big&t=Book%20Munger
+   (begin
+     (system "printf \"\\033c\"")
+     (display "   ____              _     _____ _                \n ")
+     (display " |  _ \\            | |   / ____| |\n")                
+     (display "  | |_) | ___   ___ | | _| (___ | |_ ___  _ __ ___\n") 
+     (display "  |  _ < / _ \\ / _ \\| |/ /\\___ \\| __/ _ \\| '__/ _ \\\n")
+     (display "  | |_) | (_) | (_) |   < ____) | || (_) | | |  __/\n")
+     (display "  |____/ \\___/ \\___/|_|\\_\\_____/ \\__\\___/|_|  \\___|\n")
+     (display "  ~URBIT friendly  \n\n")
+     (display (string-append "Library: " top-dir "\n\n"))
+     ))
+
+(define (display-main-menu)
+  (begin
+    (display-logo)
+    (display "1 Query Library\n")
+    (display "2 Process deposit files\n")
+    (display "3 Add a tag to controlled list\n")
+    (display "4 Add suffix\n\n")
+    (display "Ctrl-z to exit\n\n")
+  ))
+
+(define (add-tag-menu-item)
+  (let* ((result (readline "Enter tag to add to controlled list: ")))
+    (add-tag db-dir backup-dir result)))
+
+(define (add-suffix-menu-item)
+  (let* ((result (readline "Enter suffix to add to controlled list: ")))
+    (add-suffix db-dir backup-dir result)))
+
+
+(define (init-library)
+  ;;str is the top level directory top-dir e.g. /home/mbc/library
+  ;;this method is called after a check has been performed to insure
+  ;;the directory does not yet exist
+  (let* ((top-dir (readline "\nEnter top level directory: "))
+	 (lib-dir (string-append top-dir "/lib/"))
+	 (db-dir (string-append top-dir "/db/"))
+	 (lib-backup-dir (string-append top-dir "/backup/"))
+	 (deposit-dir (string-append top-dir "/deposit/"))
+	 (withdraw-dir (string-append top-dir "/withdraw/"))
+	 (json-output (scm->json-string `(("top-dir" . ,top-dir) ("lib-dir" . ,lib-dir)("db-dir" . ,db-dir)("backup-dir" . ,lib-backup-dir)("deposit-dir" . ,deposit-dir)("withdraw-dir" . ,withdraw-dir)))))
+    (begin
+;;      (system (string-append "mkdir " top-dir " " top-dir "/db " " " top-dir "/lib " top-dir "/backup " top-dir "/deposit " top-dir "/withdraw "))
+      (system (string-append "mkdir " top-dir " " lib-dir " " db-dir " " lib-backup-dir " " deposit-dir " " withdraw-dir ))
+      (make-config-file json-output)
+      (set-vars)
+      (init-db-json db-dir)
+      (init-tags db-dir)
+      (init-suffixes db-dir)
+      (display (string-append "\nLibrary initialized at " top-dir "\n"))
+    )))
 
 
 
@@ -287,37 +237,13 @@ SELECT DISTINCT book.id, book.title FROM book, author, tag, book_author, book_ta
 	(dummy (display-main-menu))
  	(selection (readline "Selection: "))
 	)
-       (pretty-print  top-dir)
-
-   ;;(if config-exists? (main-menu) (init-library))
-
-   ))
-
-
-;; (define (top args)
-;;   (let* (
-;; 	 (dummy (activate-readline))
-;; 	 (result (if (null? (cdr args)) 3
-;; 		     (if (string= (cadr args) "init") 1
-;; 			 (if (access? (string-append (cadr args) "/db/" lib-file-name) F_OK) 2 3)))))
-;;     (cond ((= result 1) (let* ((desired-dir (readline "\nEnter top level directory: "))
-;; 			       (dir-exists? (access? (string-append desired-dir "/db/" lib-file-name) F_OK)))
-;; 			  (if dir-exists?
-;; 			      (display  (string-append "Library: " desired-dir "/db/" lib-file-name " already exists!\n\n"))
-;; 			      (init-library desired-dir))))				     		     
-;; 	  ( (= result 2) (let* (
-;; 				(dummy (set-vars args))
-;; 				(dummy (display-logo))
-;; 				(dummy (display-main-menu))
-;; 				(selection (readline "Selection: ")))
-;; 			   (cond ((string= selection "1") (query-an-item))
-;; 				 ((string= selection "2") (process-deposit))
-;; 				 ((string= selection "3") (add-tag))
-;; 				 ((string= selection "4") (add-suffix)))))					   		       
-;; 	  ((= result 3) (display "\nInvalid argument to bookmunger.sh\nArgument should be either \"init\" or a valid library directory e.g. \"/home/myhome/library\"\n\n")))))
-
-
-
+   (cond ((string= selection "1") (query-an-item))
+ 	 ((string= selection "2") (process-deposit))
+	 ((string= selection "3") (add-tag-menu-item))
+	 ((string= selection "4") (add-suffix-menu-item)))
+   
+ ))
+   
 
 
 

@@ -16,9 +16,16 @@
 	     #:export (find-occurences-in-string)
 	     #:export (any-not-false?)
 	     #:export (move-file)
-	     #:export (make-lib-backup)
-	     
+	     #:export (make-backup)
+	     #:export (get-rand-file-name)
+	     #:export (get-file-extension)
 	     )
+
+(define (get-rand-file-name pre suff)
+  (string-append pre "-" (number->string (random 10000000000000000000000)) "." suff))
+
+(define (get-file-extension f)
+ (substring f (+ (string-rindex f #\.) 1) (string-length f)))
 
 
 (define (move-file old new)
@@ -26,6 +33,15 @@
 	 (new-fname (string-append dest-dir new))
 	 (command (string-append "mv '" old-fname "' '" new-fname"'")))
    (system command )))
+
+
+(define (make-backup src-dir file-name backup-dir)
+  ;;src-dir should end with /
+  (let* ((src-file-name (string-append src-dir file-name))
+	 (pref (date->string  (current-date) "~Y~m~d~I~M"))
+	 (backed-up-filename (string-append backup-dir pref "-" file-name))
+	 (command (string-append "cp " src-file-name " " backed-up-filename)))
+     (system command)))
 
 
 (define (make-lib-backup)
@@ -54,26 +70,3 @@
 	    (if (equal? (car x) #f) (any-not-false? (cdr x)) #t)))
 
 
- (define (display-logo)
-   ;;https://patorjk.com/software/taag/#p=display&f=Big&t=Book%20Munger
-   (begin
-     (system "printf \"\\033c\"")
-     (display "   ____              _     _____ _                \n ")
-     (display " |  _ \\            | |   / ____| |\n")                
-     (display "  | |_) | ___   ___ | | _| (___ | |_ ___  _ __ ___\n") 
-     (display "  |  _ < / _ \\ / _ \\| |/ /\\___ \\| __/ _ \\| '__/ _ \\\n")
-     (display "  | |_) | (_) | (_) |   < ____) | || (_) | | |  __/\n")
-     (display "  |____/ \\___/ \\___/|_|\\_\\_____/ \\__\\___/|_|  \\___|\n")
-     (display "  for ~URBIT  \n\n")
-     (display (string-append "Library: " top-dir "\n"))
-     (display "Ctrl-z to exit\n\n")))
-
-(define (display-main-menu)
-  (begin
-    (display-logo)
-    (display "1 Query Library\n")
-    (display "2 Process deposit files\n")
-    (display "3 Add a tag\n")
-    (display "4 Add suffix\n\n")
-  
-  ))

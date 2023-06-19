@@ -12,8 +12,25 @@
 	     #:use-module (ice-9 textual-ports)
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
+	     #:use-module (bookstore suffix)
 	     #:export (get-title-authors-filename)
+	     #:export (get-authors-as-string)
+	     #:export (get-authors-as-list)
+	     
 	     )
+
+(define (get-authors-as-string lst str)
+  ;; input is the processed list from get-authors-as-list
+  ;; str should be ""
+  ;;output is a single string for display or input into get-author-ids
+  ;;use the list of authors for adding to database
+  (if (null? (cdr lst))
+      (begin
+	(set! str (string-append str (car lst) ))
+	str)       
+       (begin
+	 (set! str (string-append str (car lst) ", " ))
+	 (get-authors-as-string (cdr lst) str))))
 
 
 (define (get-authors-as-list str)
@@ -57,7 +74,7 @@
 
 
 
-(define (get-title-authors-filename str)
+(define (get-title-authors-filename str db-dir)
   ;; return a list '(title '(authors) new-file-name)
   ;; last "by" is the delimiter of title author
   (let* ((len (length (string->list str)))
@@ -65,7 +82,7 @@
 	 (pref (substring str 0  dot ))
 	 (len-pref (length (string->list pref)))	 
 	 (ext (substring str dot len)) ;; includes .
-	 (all-suffixes (get-all-suffixes-as-list))
+	 (all-suffixes (get-all-suffixes-as-list db-dir))
 	 (pref (recurse-remove-suffix all-suffixes pref))
 	 (b (last (list-matches " by " pref)))
 	 (start (match:start  b))
@@ -80,5 +97,5 @@
     
   `(,title ,auth-lst ,new-file-name) ))
 
-;;(get-title-authors-filename "A Biologists Guide to Mathematical Modeling in Ecology and Evolution by Sarah P. Otto, Troy Day.epub")
+;;(get-title-authors-filename "A Biologists Guide to Mathematical Modeling in Ecology and Evolution by Sarah P. Otto, Troy Day.epub" "/home/mbc/temp/mylib/db/")
 

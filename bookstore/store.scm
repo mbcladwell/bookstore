@@ -19,7 +19,6 @@
 	     #:use-module (bookstore tags)	     
 	     #:export (top)
 	     #:export (init-library)
-	     
 	     )
 
 (define book-count 0)
@@ -34,14 +33,13 @@
 (define dest-dir "") ;; final destination directory in urblib desk
 (define withdraw-dir "")  ;;for books to read - link to ereader
 (define doc-viewer "ebook-viewer") ;;from Calibre
-(define lib-file-name "book.json")
-(define config-file-name "config.json")
+(define lib-file-name "books.json")
 
 
 (define (set-vars)
   ;;arg should be a list of top level e.g. /home/mbc/temp/lib  no trailing slash
   ;;first element is file name
-  (let* ((p  (open-input-file config-file-name))
+  (let* ((p  (open-input-file  config-file-name))
 	 (all-vars (json->scm p)))
           (begin
 	    (set! top-dir (assoc-ref all-vars "top-dir" ))
@@ -63,15 +61,6 @@
 ;; last, first and last, first
 ;;  
 
-
-(define (get-all-books-as-string lst out)
-  (if (null? (cdr lst))
-      (begin
-	(set! out (string-append (car lst) "\n" out))
-	out)
-      (begin
-	(set! out (string-append (car lst) "\n" out))
-	(get-all-books-as-string (cdr lst) out))))
 
 
 
@@ -216,7 +205,7 @@ SELECT DISTINCT book.id, book.title FROM book, author, tag, book_author, book_ta
 	 (lib-backup-dir (string-append top-dir "/backup/"))
 	 (deposit-dir (string-append top-dir "/deposit/"))
 	 (withdraw-dir (string-append top-dir "/withdraw/"))
-	 (json-output (scm->json-string `(("top-dir" . ,top-dir) ("lib-dir" . ,lib-dir)("db-dir" . ,db-dir)("backup-dir" . ,lib-backup-dir)("deposit-dir" . ,deposit-dir)("withdraw-dir" . ,withdraw-dir)))))
+	 (json-output (scm->json-string `(("top-dir" . ,top-dir)))))
     (begin
 ;;      (system (string-append "mkdir " top-dir " " top-dir "/db " " " top-dir "/lib " top-dir "/backup " top-dir "/deposit " top-dir "/withdraw "))
       (system (string-append "mkdir " top-dir " " lib-dir " " db-dir " " lib-backup-dir " " deposit-dir " " withdraw-dir ))

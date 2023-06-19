@@ -12,7 +12,7 @@
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (json)
-	     #:export (init-db-jsons)
+	     #:export (init-db-json)
 	     #:export (init-library)
 	     #:export (make-config-file)
 	     #:export (config-file-name)
@@ -43,30 +43,27 @@
 ;;consuffix.json {"suffixes":["(z-lib)","libgen"]}
 
 
-(define (init-db-jsons db-dir)
+(define (init-db-json db-dir)
   ;;initialize the main book database
-  (let* ( (book1 `(("title" . "mytitle1")("id" . "1234")("isbn" . "")))
-	 (book2 `(("title" . "mytitle2")("id" . "5678")("isbn" . "")))
-	 (book3 `(("title" . "mytitle3")("id" . "9012")("isbn" . "")))
-	 (all-books `(,book1 ,book2 ,book3))
-	;; (content (scm->json-string `(( ,all-books) )))
-	 (all-books-vec (list->vector all-books))
-	;; (content (scm->json-string `(("books" . ,all-books-vec) )))
-	 ;;(p  (open-output-file (string-append db-dir "title.json")))
-	 (tags `(("id". "8712738127")("tags" . #("mytag1" "mytag2" "mytag3"))))	 
-;;	 (tags2 #("mytag4" "mytag5" "mytag2"))
-	 (content (scm->json-string `(("tagvec" . ,tags) )))
-	 (p  (open-output-file (string-append db-dir "tags.json")))
-	 
-	 ;; (auts1 #("myaut1" "myaut2" "myaut3"))
-	 ;; (auts2 #("myaut4" "myaut5" "myaut2"))
-	 ;; (auts3 #("myaut7" "myaut8" "myaut9"))	 
-	 
-	
-	 ;; (all-books-vec (list->vector all-books))
-	 ;; (content (scm->json-string `(("books" . ,all-books-vec) ))))
-	 )
+  (let* ((tags1 "mytag1;mytag2;mytag3")
+	 (tags2 "mytag4;mytag5;mytag2")	 
+	 (tags3 "mytag4;mytag6;mytag7")	 
+	 ;; (content (scm->json-string `(("author" . "myauthor1")("title" . "mytitle1")("hash" . "1234")("tags" . ,tags))))
+	 (book1 `(("title" . "mytitle1")("author" . "Joe Blow")("hash" . "1234")("tags" . ,tags1)))
+	 (book2 `(("title" . "mytitle2")("author" . "Plain Jane")("hash" . "5678")("tags" . ,tags2)))
+	 (book3 `(("title" . "mytitle3")("author" . "Bill Barr")("hash" . "9012")("tags" . ,tags2)))
+	 (book4 `(("title" . "mytitle4")("author" . "Chuck Chew")("hash" . "5378")("tags" . ,tags3)))
+	 (book5 `(("title" . "mytitle5")("author" . "Don Dee")("hash" . "9836")("tags" . ,tags3)))
+	 (book6 `(("title" . "mytitle6")("author" . "Paul Poop")("hash" . "4523")("tags" . ,tags3)))
+	 (all-books1 `#(,book1 ,book2 ,book3 ,book4 ,book5 ,book6))
+	 (element1 `(("books" . ,all-books1)))
+	 (content (scm->json-string element1))
+	 (p  (open-output-file (string-append db-dir "books.json")))	
+	 )    
     (begin
-      (put-string p content)
-      (force-output p))))
+      (pretty-print content)
+     (put-string p content)
+      (force-output p)
+      )))
 
+;;(init-db-json)

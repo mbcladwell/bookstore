@@ -12,6 +12,68 @@
 	     #:use-module (ice-9 textual-ports)
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
-	     #:use-module (json) 
+	     #:use-module (json)
+	     #:export (make-book-list-element)
+	     #:export (get-all-books)
+	     #:export (get-books-with-title)
+	     #:export (get-books-for-author)
 	     )
+
+
+(define (make-book-list-element title auths id tags isbn)
+  ;;auths and tags are vectors
+   `(("title" . ,title)("auths" . ,auths)("id" . ,id)("tags" . ,tags)("isbn" . ,isbn)))
+
+(define (get-all-books top-dir);;as list
+  (let* ((books-file-name  (string-append top-dir "db/books.json")) 
+	 (p  (open-input-file books-file-name))
+	 (all-books (json->scm p))
+	 (book-vec (assoc-ref all-books "books"))
+	 ;;(tag-vec (assoc-ref all-tags "tags"))
+	 )
+    (vector->list book-vec)))
+
+
+(define (get-all-books-as-string lst out)
+  (if (null? (cdr lst))
+      (begin
+	(set! out (string-append (car lst) "\n" out))
+	out)
+      (begin
+	(set! out (string-append (car lst) "\n" out))
+	(get-all-books-as-string (cdr lst) out))))
+
+
+(define (recurse-get-books-for-author auth lst results)
+  ;;results is a list of books for given author
+  (if (null? (cdr lst))
+      (if (string=? (assoc-ref (car lst) "author") auth)(cons (car lst) results) results)
+      (if (string=? (assoc-ref (car lst) "author") auth)
+	   (cons (car lst) results)
+	  (recurse-get-books-for-author auth (cdr lst) results))      
+      ))
+
+(define (get-books-for-author aut top-dir)
+  (let* ((all-books  (get-all-books top-dir)))
+    (recurse-get-books-for-author aut all-books '())))
+
+
+(define (recurse-get-books-with-title titl lst results)
+  ;;results is a list of books for given title
+  (if (null? (cdr lst))
+      (if (string=? (assoc-ref (car lst) "title") titl) (cons (car lst) results) results)       
+      (if (string=? (assoc-ref (car lst) "title") titl)
+	  (cons (car lst) results)
+	  (recurse-get-books-with-title titl (cdr lst) results))
+      ))
+
+(define (get-books-with-title tits top-dir)
+  (let* ((all-books  (get-all-books top-dir)))
+    (recurse-get-books-with-title tits all-books '())))
+
+
+
+
+
+
 

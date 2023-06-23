@@ -16,6 +16,30 @@
 	     
 	     )
 
+;; (define (get-epub-tit-aut fname)
+
+;;   (let* ((command1 (string-append "unzip -p  content.opf | grep dc:creator" ))
+;; 	 (aut (system command1))
+;; ;;	 (command2 (string-append "unzip -p " fname " content.opf | grep dc:title" ))
+;; ;;	 (tit (system command2))
+
+;; 	 )
+;;     (pretty-print (string-append "  author: " aut)))
+;;   )
+
+
+ 
+;;unzip -p  Anarchy_\ The\ East\ India\ Company\,\ Corporate\ Violence\,\ and\ the\ Pillage\ of\ an\ Empire\,\ The\ -\ William\ Dalrymple.epub content.opf | grep ISBN
+
+(define (get-isbn-from-opf fname)
+ (let* ((command1 (string-append "unzip -p  content.opf | grep dc:creator" ))
+	 (aut (system command1))
+
+	 )
+    (pretty-print (string-append "  author: " aut)))
+  )
+
+
 
 
 

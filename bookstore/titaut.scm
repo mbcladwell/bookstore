@@ -13,7 +13,7 @@
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (bookstore suffix)
-	     #:export (get-title-authors-filename)
+	     #:export (get-title-authors-fname-ext)
 	     #:export (get-authors-as-string)
 	     #:export (get-authors-as-list)
 	     
@@ -74,28 +74,31 @@
 
 
 
-(define (get-title-authors-filename str db-dir)
-  ;; return a list '(title '(authors) new-file-name)
+(define (get-title-authors-fname-ext str top-dir)
+  ;; return a list '(title '(authors) new-file-name old-file-name ext)
   ;; last "by" is the delimiter of title author
+  ;; str is file name only, not full path
+  ;; new-file-name is the file name with suffixes removed, if any
+  ;; fname is old file name with suffix no extension
   (let* ((len (length (string->list str)))
 	 (dot (string-rindex str #\.)) ;;reverse search
-	 (pref (substring str 0  dot ))
-	 (len-pref (length (string->list pref)))	 
-	 (ext (substring str dot len)) ;; includes .
-	 (all-suffixes (get-all-suffixes-as-list db-dir))
-	 (pref (recurse-remove-suffix all-suffixes pref))
-	 (b (last (list-matches " by " pref)))
+	 (fname (substring str 0  dot ))
+	 (len-fname (length (string->list fname)))	 
+	 (ext (substring str (+ dot 1) len)) ;; includes .
+	 (all-suffixes (get-all-suffixes-as-list top-dir))
+	 (new-file-name (recurse-remove-suffix all-suffixes fname))
+	 (b (last (list-matches " by " new-file-name)))
 	 (start (match:start  b))
 	 (end (match:end  b))
-	 (len-pref (length (string->list pref)));;it might have changed
-	 (title (substring pref 0 start))
-	 (authors (substring pref end len-pref))
+	 (len-new-file-name (length (string->list new-file-name)));;it might have changed
+	 (title (substring new-file-name 0 start))
+	 (authors (substring new-file-name end len-new-file-name))
 	  (auth-lst (get-authors-as-list authors)) ;;gets a list '("Fname1 Lname1" "Fname2 Lname2")
-	  (new-file-name (string-append title ext))
+	;;  (new-file-name (string-append title ext))
 	 )
- ;;pref))
+ ;;new-file-name))
     
-  `(,title ,auth-lst ,new-file-name) ))
+  `(,title ,auth-lst ,new-file-name ,fname ,ext) ))
 
-;;(get-title-authors-filename "A Biologists Guide to Mathematical Modeling in Ecology and Evolution by Sarah P. Otto, Troy Day.epub" "/home/mbc/temp/mylib/db/")
+
 

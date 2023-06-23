@@ -27,3 +27,29 @@
 
 
 ;;(get-author-ids "Howard Rheingold, Joe Blow")
+
+
+(define (recurse-make-large-lib the-lib counter)
+  (if (= counter 30000)
+      (let* ((p  (open-output-file  "/home/mbc/temp/test/big-lib.json" ))
+	     (the-lib-vec (list->vector the-lib))
+	     (content `(("books" . ,the-lib-vec)))
+	     (dummy (put-string p (scm->json-string content))))
+	(force-output p))
+      (begin
+	(set! the-lib (cons (make-book-list-element
+			     (number->string (random 100000000000000000))
+			     (number->string (random 1000000000000000000000))
+			     (number->string (random 10000000000000000000000))
+			     (number->string (random 10000000000000000000000))
+			     (number->string (random 10000000000000000000000))
+			     )
+			    the-lib))
+	(set! counter (+ counter 1))
+	(recurse-make-large-lib the-lib counter))
+      ))
+
+  (define (make-large-lib)
+    (let* ((old-lib (get-all-books top-dir)))
+      (recurse-make-large-lib old-lib 0)
+      ))

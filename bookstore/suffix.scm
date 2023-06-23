@@ -24,9 +24,9 @@
 
 (define suffixes-file-name "consuffix.json")
 
-(define (get-all-suffixes-as-list db-dir)
+(define (get-all-suffixes-as-list top-dir)
   ;;returns a list of all tags
-  (let* ((suf-fn (string-append db-dir suffixes-file-name) )
+  (let* ((suf-fn (string-append top-dir "db/" suffixes-file-name) )
 	 (p  (open-input-file suf-fn))
 	 (all-suffs (json->scm p))
 	 (suf-vec (assoc-ref all-suffs "suffixes"))

@@ -14,15 +14,17 @@
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (json)
 	     #:export (make-book-list-element)
+	     #:export (make-json-for-gs)
 	     #:export (get-all-books)
 	     #:export (get-books-with-title)
 	     #:export (get-books-for-author)
+	     #:export (cons-books-to-lib)
 	     )
 
 
-(define (make-book-list-element title auths id tags isbn)
+(define (make-book-list-element title auths fname id ext tags isbn)
   ;;auths and tags are vectors
-   `(("title" . ,title)("auths" . ,auths)("id" . ,id)("tags" . ,tags)("isbn" . ,isbn)))
+   `(("title" . ,title)("author" . ,auths)("fname" . ,fname)("id" . ,id)("ext" . ,ext)("tags" . ,tags)("isbn" . ,isbn)))
 
 (define (get-all-books top-dir);;as list
   (let* ((books-file-name  (string-append top-dir "db/books.json")) 
@@ -32,6 +34,29 @@
 	 ;;(tag-vec (assoc-ref all-tags "tags"))
 	 )
     (vector->list book-vec)))
+
+(define (cons-books-to-lib new old)
+  ;;new element is '(old-fname new-fname '(list of attributes))
+  ;;use (caddr to get it)
+  (if (null? (cdr new))
+      (begin
+	(set! old (cons  (caddar new) old))
+	old)
+      (begin
+	(set! old (cons  (caddar new) old))
+	(cons-books-to-lib (cdr new) old))))
+
+
+
+(define (make-json-for-gs lst top-dir)
+  ;;json for import in graph-store
+  (let* ((vec (list->vector lst))
+	 (content (scm->json-string `(("books" .  ,vec))))
+	 (pref (date->string  (current-date) "~Y~m~d~I~M"))
+	 (gs-filename (string-append top-dir "lib/" pref "-forgs.json"))
+	 (out-port (open-output-file gs-filename))
+	 (dummy (put-string out-port content)))
+    (force-output out-port)))
 
 
 (define (get-all-books-as-string lst out)

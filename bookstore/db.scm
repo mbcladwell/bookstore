@@ -18,6 +18,9 @@
 	     #:export (get-all-books)
 	     #:export (get-books-with-title)
 	     #:export (get-books-for-author)
+	     #:export (get-books-with-tag)
+	     #:export (get-books-with-isbn)
+	     #:export (get-books-with-id)
 	     #:export (cons-books-to-lib)
 	     )
 
@@ -69,19 +72,6 @@
 	(get-all-books-as-string (cdr lst) out))))
 
 
-(define (recurse-get-books-for-author auth lst results)
-  ;;results is a list of books for given author
-  (if (null? (cdr lst))
-      (if (string=? (assoc-ref (car lst) "author") auth)(cons (car lst) results) results)
-      (if (string=? (assoc-ref (car lst) "author") auth)
-	   (cons (car lst) results)
-	  (recurse-get-books-for-author auth (cdr lst) results))      
-      ))
-
-(define (get-books-for-author aut top-dir)
-  (let* ((all-books  (get-all-books top-dir)))
-    (recurse-get-books-for-author aut all-books '())))
-
 
 (define (recurse-get-books-with-title titl lst results)
   ;;results is a list of books for given title
@@ -98,6 +88,65 @@
 
 
 
+(define (get-books-for-author aut top-dir)
+  (let* ((all-books  (get-all-books top-dir)))
+    (recurse-get-books-for-author aut all-books '())))
+
+;;(vector-index            #("Dodo Doodoo" "Plain Jane" "Joer Blow"))
+
+(define (recurse-get-books-for-author auth lst results)
+  ;;results is a list of books for given author
+  (if (null? (cdr lst))
+      (if (member auth (vector->list (assoc-ref (car lst) "author")))
+	  (cons (car lst) results) results)
+      (if (member auth (vector->list (assoc-ref (car lst) "author")))     
+	  (cons (car lst) results)
+	  (recurse-get-books-for-author auth (cdr lst) results))))
+
+
+(define (get-books-with-tag tag top-dir)
+  (let* ((all-books  (get-all-books top-dir)))
+    (recurse-get-books-with-tag tag all-books '())))
+
+;;(vector-index            #("Dodo Doodoo" "Plain Jane" "Joer Blow"))
+
+(define (recurse-get-books-for-tag tag lst results)
+  ;;results is a list of books for given tag
+  (if (null? (cdr lst))
+      (if (member tag (vector->list (assoc-ref (car lst) "tags")))
+	  (cons (car lst) results) results)
+      (if (member tag (vector->list (assoc-ref (car lst) "tags")))     
+	  (cons (car lst) results)
+	  (recurse-get-books-with-tag (cdr lst) results))))
+
+
+(define (recurse-get-books-with-isbn isbn lst results)
+  ;;results is a list of books for given isbn
+  (if (null? (cdr lst))
+      (if (string=? (assoc-ref (car lst) "isbn") isbn) (cons (car lst) results) results)       
+      (if (string=? (assoc-ref (car lst) "isbn") isbn)
+	  (cons (car lst) results)
+	  (recurse-get-books-with-isbn isbn (cdr lst) results))
+      ))
+
+(define (get-books-with-isbn isbn top-dir)
+  (let* ((all-books  (get-all-books top-dir)))
+    (recurse-get-books-with-isbn isbn all-books '())))
+
+
+
+(define (recurse-get-books-with-id id lst results)
+  ;;results is a list of books for given id
+  (if (null? (cdr lst))
+      (if (string=? (assoc-ref (car lst) "id") id) (cons (car lst) results) results)       
+      (if (string=? (assoc-ref (car lst) "id") id)
+	  (cons (car lst) results)
+	  (recurse-get-books-with-id id (cdr lst) results))
+      ))
+
+(define (get-books-with-id id top-dir)
+  (let* ((all-books  (get-all-books top-dir)))
+    (recurse-get-books-with-id id all-books '())))
 
 
 

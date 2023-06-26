@@ -136,3 +136,34 @@
 			   (set! b "")) #t)		 
 		     (set! ret (dbi-get_row db-obj))))))
 	  (reverse (cons "" (cons b c)) )))  ;;add the last few, then add "" because the while won't process the last element i.e. not recursion
+
+
+(define (query-all-fields str)
+  ;;returns a list of id as integer
+  (let* ( (a   (dbi-query db-obj (string-append "SELECT book.id, book.title FROM book WHERE  book.title LIKE '%" str  "%' UNION
+                                                 SELECT DISTINCT book.id, book.title FROM book, author, tag, book_author, book_tag WHERE book_author.author_id=author.id AND book_author.book_id=book.id AND book_tag.tag_id=tag.id AND book_tag.book_id=book.id AND author.author_name LIKE '%" str  "%' UNION
+SELECT DISTINCT book.id, book.title FROM book, author, tag, book_author, book_tag WHERE book_author.author_id=author.id AND book_author.book_id=book.id AND book_tag.tag_id=tag.id AND book_tag.book_id=book.id AND tag.tag_name LIKE '%" str  "%'" )))
+	  (lst '())
+	  (ret (dbi-get_row db-obj))
+	  (dummy (while (not (equal? ret #f))
+		   (begin		      
+		     (set! lst (cons (assoc-ref ret "id") lst))
+		     (set! ret (dbi-get_row db-obj))))))
+    lst))
+
+;;(query-all-fields "capital")
+
+(define (display-results lst)
+  ;;list is a list of book IDs
+  ;;book.id is what will have to be typed to view/move a book
+  (if (null? (cdr lst))
+      (let* ((dummy (dbi-query db-obj (string-append "SELECT book.id, book.title FROM book WHERE  book.id = '" (number->string (car lst)) "'")))
+	     (ret (dbi-get_row db-obj))			 
+	     (dummy (display (string-append (number->string (assoc-ref ret "id")) " | " (assoc-ref ret "title")  "\n\n")))
+	     )
+	#t)
+      (let* ((dummy (dbi-query db-obj (string-append "SELECT book.id, book.title FROM book WHERE  book.id = '" (number->string (car lst)) "'")))
+	     (ret (dbi-get_row db-obj))			 
+	     (dummy (display (string-append (number->string (assoc-ref ret "id")) " | " (assoc-ref ret "title")  "\n")))
+	     )
+	(display-results (cdr lst)))	))

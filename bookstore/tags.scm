@@ -18,13 +18,14 @@
 	     #:export (get-tag-for-book)
 	     #:export (get-all-tags-as-string)
 	     #:export (get-all-tags)
+	     #:export (display-tag-menu)
 	     
 	     )
 
-(define tags-file-name "contags.json")
+;;(define tags-file-name "contags.json")
 
 
-(define (get-all-tags db-dir)
+(define (get-all-tags db-dir tags-file-name)
   ;;returns a list of all tags
   (let* ((tags-fn (string-append db-dir tags-file-name) )
 	 (p  (open-input-file tags-fn))
@@ -34,7 +35,7 @@
     (vector->list tag-vec)     
     ))
 
-(define (init-tags db-dir)
+(define (init-tags db-dir tags-file-name)
   ;;initialize the main tag json
   (let* ((tags-fn (string-append db-dir tags-file-name) )
 	 (p  (open-output-file tags-fn))
@@ -45,9 +46,9 @@
       (put-string p content)
       (force-output p))))
 
-(define (add-tag db-dir backup-dir new-tag)
+(define (add-tag db-dir backup-dir new-tag tags-file-name)
   ;;adds tag to controlled list of tags
-  (let* ((all-tags (get-all-tags db-dir))
+  (let* ((all-tags (get-all-tags db-dir tags-file-name))
 	 (new-tags (cons new-tag all-tags ))
 	 (new-tags-sorted (list->vector (sort-list! new-tags string<)))
 	 (old-filename (string-append db-dir tags-file-name) )
@@ -103,8 +104,8 @@
 	(get-all-tag-rows  lst))
       ))
 
-(define (display-tag-menu)
-  (let* ((all-tags (get-all-tags db-dir))
+(define (display-tag-menu db-dir tags-file-name)
+  (let* ((all-tags (get-all-tags db-dir tags-file-name))
 	 (tags-len (length all-tags))
 	 (per-sublist (+ (floor (/ tags-len 3)) 1))
 	 (sublists (make-sublist per-sublist all-tags)))
@@ -123,8 +124,8 @@
   ;;in: first n letters of desired tag
   (let* ((dummy (display (string-append "\n\nAll tags for library " db-dir "\n")))
 	 (dummy (display "--------------------------------------------------------------------------------\n\n"))
-	 (dummy (display-tag-menu))
-	 (all-tags (get-all-tags db-dir))
+	 (dummy (display-tag-menu db-dir))
+	 (all-tags (get-all-tags db-dir tags-file-name))
 	 (in (readline "Select tag: "))
 	 (result (recurse-desired-tag in all-tags))
 	 (response (readline (string-append "Add the tag '" result "' to the book " title " ?[Y|n]")))
@@ -135,6 +136,7 @@
 (define (get-all-tags-as-string db-dir tags-file-name)
   (let* ((sep "========================================================================================================\n")
 	 (lst (cdr (get-all-tags db-dir tags-file-name)))
+	 (dummy (pretty-print "tags: " lst))
 	 (out sep)
 	 (dummy (while (not (string= (car lst) "") )		  
 		  (begin

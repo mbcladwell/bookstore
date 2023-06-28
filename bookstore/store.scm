@@ -18,6 +18,7 @@
 	     #:use-module (bookstore utilities)	     
 	     #:use-module (bookstore tags)	     
 	     #:use-module (bookstore titaut)	     
+	     #:use-module (bookstore menus)	     
 	     #:export (top)
 	     #:export (init-library)
 	     )
@@ -142,58 +143,40 @@
 
 
 
-(define (query-an-item)
-  (let* ((dummy (display-logo))
-;;	 (dummy (display (get-all-tags-as-string db-dir tags-file-name)))
-	 (dummy (display-tag-menu db-dir tags-file-name))
-	 (find-me (readline "Query: "))
-	 (lst (query-all-fields find-me)))
-    (if (= (length lst) 0)
-	(display "Match not found!\n\n")
-	(let* ((dummy (display-results lst))			     			     		     
-	       (what-do  (readline "(o)pen or (r)etrieve (id): "))
-	       (a (string-split what-do #\space))
-	       (action (car a))
-	       (id (string->number (cadr a)))
-	       (b (if (string= action "o")  (view-book id)))
-	       (c (if (string= action "r") (copy-book-to-readme id))))
-	  #t))))
+;; (define (query-an-item)
+;;   (let* ((dummy (display-logo))
+;; ;;	 (dummy (display (get-all-tags-as-string db-dir tags-file-name)))
+;; 	 (dummy (display-tag-menu db-dir tags-file-name))
+;; 	 (find-me (readline "Query: "))
+;; 	 (lst (query-all-fields find-me)))
+;;     (if (= (length lst) 0)
+;; 	(display "Match not found!\n\n")
+;; 	(let* ((dummy (display-results lst))			     			     		     
+;; 	       (what-do  (readline "(o)pen or (r)etrieve (id): "))
+;; 	       (a (string-split what-do #\space))
+;; 	       (action (car a))
+;; 	       (id (string->number (cadr a)))
+;; 	       (b (if (string= action "o")  (view-book id)))
+;; 	       (c (if (string= action "r") (copy-book-to-readme id))))
+;; 	  #t))))
 
 
+;; (define (display-results lst)
+;;   ;;list is a list of books from db
+;;   ;;book.id is what will have to be typed to view/move a book
+;;   (if (null? (cdr lst))
+;;       (let* (;(dummy (dbi-query db-obj (string-append "SELECT book.id, book.title FROM book WHERE  book.id = '" (number->string (car lst)) "'")))
+;; 	     ;(ret (dbi-get_row db-obj))			 
+;; 	     (dummy (display (string-append  (assoc-ref (car lst) "id") " | " (assoc-ref (car lst) "title")  "\n\n")))
+;; 	     )
+;; 	#t)
+;;       (let* (;(dummy (dbi-query db-obj (string-append "SELECT book.id, book.title FROM book WHERE  book.id = '" (number->string (car (car lst))) "'")))
+;; 	     ;(ret (dbi-get_row db-obj))			 
+;; 	     (dummy (display (string-append (assoc-ref (car lst) "id") " | " (assoc-ref (car lst) "title")  "\n")))
+;; 	     )
+;; 	(display-results (cdr lst)))	))
 
 
- (define (display-logo)
-   ;;https://patorjk.com/software/taag/#p=display&f=Big&t=Book%20Munger
-   (begin
-     (system "printf \"\\033c\"")
-     (display "   ____              _     _____ _                \n ")
-     (display " |  _ \\            | |   / ____| |\n")                
-     (display "  | |_) | ___   ___ | | _| (___ | |_ ___  _ __ ___\n") 
-     (display "  |  _ < / _ \\ / _ \\| |/ /\\___ \\| __/ _ \\| '__/ _ \\\n")
-     (display "  | |_) | (_) | (_) |   < ____) | || (_) | | |  __/\n")
-     (display "  |____/ \\___/ \\___/|_|\\_\\_____/ \\__\\___/|_|  \\___|\n")
-     (display "  ~Urbit friendly  \n\n")
-     (display (string-append "Library: " top-dir "\n\n"))
-     ))
-
-(define (display-main-menu)
-  (begin
-    (display-logo)
-  
-    (display "1 Query Library\n")
-    (display "2 Process deposit files\n")
-    (display "3 Add a tag to controlled list\n")
-    (display "4 Add suffix\n\n")
-    (display "Ctrl-z to exit\n\n")
-  ))
-
-(define (add-tag-menu-item)
-  (let* ((result (readline "Enter tag to add to controlled list: ")))
-    (add-tag db-dir backup-dir result)))
-
-(define (add-suffix-menu-item)
-  (let* ((result (readline "Enter suffix to add to controlled list: ")))
-    (add-suffix db-dir backup-dir result)))
 
 
 (define (init-library)
@@ -219,20 +202,6 @@
     )))
 
 
-
-(define (display-query-submenu)
-  (let* (
-	 (dummy (display-logo))
-	 (dummy (display "1 Query by keyword\n"))
-	 (dummy (display "2 Query by title\n"))
-	 (dummy (display "3 Query by author\n\n"))
-	 (dummy (display "Ctrl-z to exit\n\n"))
-	 (selection (readline "Selection: "))
-	 )
-     (cond ((string= selection "1") (query-by-keyword))
- 	 ((string= selection "2") (process-deposit top-dir))
-	 ((string= selection "3") (add-tag-menu-item))
-    )))
 
   
 

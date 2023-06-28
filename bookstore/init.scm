@@ -19,7 +19,6 @@
 	     )
 
 
-(define config-file-name (string-append (getenv "HOME") "/.config/bookstore/config.json"))
 
 
 (define (make-config-file content)

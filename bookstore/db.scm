@@ -104,20 +104,22 @@
 	  (recurse-get-books-for-author auth (cdr lst) results))))
 
 
-(define (get-books-with-tag tag top-dir)
-  (let* ((all-books  (get-all-books top-dir)))
-    (recurse-get-books-with-tag tag all-books '())))
 
 ;;(vector-index            #("Dodo Doodoo" "Plain Jane" "Joer Blow"))
 
-(define (recurse-get-books-for-tag tag lst results)
+(define (recurse-get-books-with-tag tag lst results)
   ;;results is a list of books for given tag
   (if (null? (cdr lst))
       (if (member tag (vector->list (assoc-ref (car lst) "tags")))
 	  (cons (car lst) results) results)
       (if (member tag (vector->list (assoc-ref (car lst) "tags")))     
 	  (cons (car lst) results)
-	  (recurse-get-books-with-tag (cdr lst) results))))
+	  (recurse-get-books-with-tag tag (cdr lst) results))))
+
+
+(define (get-books-with-tag tag top-dir)
+  (let* ((all-books  (get-all-books top-dir)))
+    (recurse-get-books-with-tag tag all-books '())))
 
 
 (define (recurse-get-books-with-isbn isbn lst results)

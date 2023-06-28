@@ -15,10 +15,12 @@
 	     #:use-module (bookstore utilities)
 	     #:export (init-tags)
 	     #:export (add-tag)
-	     #:export (get-tag-for-book)
+	     #:export (assign-tag-to-book)
 	     #:export (get-all-tags-as-string)
 	     #:export (get-all-tags)
 	     #:export (display-tag-menu)
+	     #:export (recurse-desired-tag)
+	     #:export (query-by-tag)
 	     
 	     )
 
@@ -112,6 +114,7 @@
     (get-all-tag-rows sublists)))
 
 (define (recurse-desired-tag in lst)
+  ;;figure out if the tag exist from the first few letters
   (if (null? (cdr lst))
       (if (string=? in (substring (car lst) 0 (string-length in)))
 	  (car lst)	
@@ -120,7 +123,7 @@
 	  (car lst)	
 	  (recurse-desired-tag in (cdr lst))) ))
 
-(define (get-tag-for-book title)
+(define (assign-tag-to-book title)
   ;;in: first n letters of desired tag
   (let* ((dummy (display (string-append "\n\nAll tags for library " db-dir "\n")))
 	 (dummy (display "--------------------------------------------------------------------------------\n\n"))
@@ -144,3 +147,24 @@
 		    (set! lst (cdr lst))
 		    ))))
     (string-append "\n\n" out "\n\n" sep "\n")))
+
+
+(define (query-by-tag)
+  (let* ((dummy (display-logo))
+;;	 (dummy (display (get-all-tags-as-string db-dir tags-file-name)))
+	 (dummy (display-tag-menu db-dir tags-file-name))
+	 (all-tags (get-all-tags db-dir tags-file-name))
+	 (in (readline "Select tag: "))
+	 (the-tag (recurse-desired-tag in all-tags))
+	 (lst (get-books-with-tag the-tag top-dir))
+	 )
+    (if (= (length lst) 0)
+	(display "Match not found!\n\n")
+	(let* ((dummy (display-results lst))			     			     		     
+	       (what-do  (readline "(o)pen or (r)etrieve (id): "))
+	       (a (string-split what-do #\space))
+	       (action (car a))
+	       (id (string->number (cadr a)))
+	       (b (if (string= action "o")  (view-book id)))
+	       (c (if (string= action "r") (copy-book-to-readme id))))
+	  #t))))

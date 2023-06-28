@@ -12,6 +12,7 @@
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (json)
+	     #:use-module (bookstore env)
 	     #:use-module (bookstore init)
 	     #:use-module (bookstore suffix)
 	     #:use-module (bookstore db)
@@ -21,38 +22,24 @@
 	     #:use-module (bookstore menus)	     
 	     #:export (top)
 	     #:export (init-library)
+	  ;   #:export (display results)
 	     )
 
-(define book-count 0)
-
-(define top-dir "") ;; top level directory - results of the input by user
-(define lib-dir "") ;; home of books
-(define db-dir "") ;; home of all jsons
-(define backup-dir "") ;; backup of all jsons
-(define deposit-dir "")  ;;  ready to be processed 1. rename to hash
-                                                 ;;2. move to lib-dir
-                                                 ;;3. update jsons
-(define dest-dir "") ;; final destination directory in urblib desk
-(define withdraw-dir "")  ;;for books to read - link to ereader
-(define doc-viewer "ebook-viewer") ;;from Calibre
-(define lib-file-name "books.json")
-(define tags-file-name "contags.json")
 
 
-
-(define (set-vars)
-  (let* ((p  (open-input-file  config-file-name))
-	 (all-vars (json->scm p)))
-          (begin
-	    (set! top-dir (assoc-ref all-vars "top-dir" ))
-	    (set! lib-dir (string-append top-dir "lib/")) ;; home of db
-	    (set! db-dir (string-append top-dir "db/")) ;; home of book.json
-	    (set! backup-dir (string-append top-dir "backup/"))
-	    (set! deposit-dir (string-append top-dir "deposit/"))  ;; out of z-lib ready to be processed
-	    (set! dest-dir (string-append top-dir "dest/")) ;; final destination directory probably ~/syncd/library/files
-	    (set! withdraw-dir (string-append top-dir "withdraw/")))
-		;;  (set! db-obj (dbi-open "sqlite3" (string-append lib-dir lib-file-name))))		                                                         )
-	 ))
+;; (define (set-vars)
+;;   (let* ((p  (open-input-file  config-file-name))
+;; 	 (all-vars (json->scm p)))
+;;           (begin
+;; 	    (set! top-dir (assoc-ref all-vars "top-dir" ))
+;; 	    (set! lib-dir (string-append top-dir "lib/")) ;; home of db
+;; 	    (set! db-dir (string-append top-dir "db/")) ;; home of book.json
+;; 	    (set! backup-dir (string-append top-dir "backup/"))
+;; 	    (set! deposit-dir (string-append top-dir "deposit/"))  ;; out of z-lib ready to be processed
+;; 	    (set! dest-dir (string-append top-dir "dest/")) ;; final destination directory probably ~/syncd/library/files
+;; 	    (set! withdraw-dir (string-append top-dir "withdraw/")))
+;; 		;;  (set! db-obj (dbi-open "sqlite3" (string-append lib-dir lib-file-name))))		                                                         )
+;; 	 ))
 
 ;;will handle the following author spellings
 ;; first last
@@ -62,6 +49,8 @@
 ;; last, first
 ;; last, first and last, first
 ;;  
+
+(define book-count 0)
 
 (define (process-file orig-fname top-dir)
   ;;processing a file involves
@@ -146,7 +135,7 @@
 ;; (define (query-an-item)
 ;;   (let* ((dummy (display-logo))
 ;; ;;	 (dummy (display (get-all-tags-as-string db-dir tags-file-name)))
-;; 	 (dummy (display-tag-menu db-dir tags-file-name))
+;; 	 (dummy (display-tag-menu ))
 ;; 	 (find-me (readline "Query: "))
 ;; 	 (lst (query-all-fields find-me)))
 ;;     (if (= (length lst) 0)
@@ -208,7 +197,7 @@
 (define (top)
  (let* (
 	(dummy (activate-readline))
-	(dummy (set-vars))
+;;	(dummy (set-vars))
 	(dummy (display-main-menu))
  	(selection (readline "Selection: "))
 	)

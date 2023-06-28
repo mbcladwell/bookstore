@@ -13,6 +13,7 @@
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (json)
+	     #:use-module (bookstore env)
 	     #:export (make-book-list-element)
 	     #:export (make-json-for-gs)
 	     #:export (get-all-books)
@@ -107,19 +108,26 @@
 
 ;;(vector-index            #("Dodo Doodoo" "Plain Jane" "Joer Blow"))
 
-(define (recurse-get-books-with-tag tag lst results)
+(define (recurse-get-books-with-tag tag lst results counter)
   ;;results is a list of books for given tag
   (if (null? (cdr lst))
       (if (member tag (vector->list (assoc-ref (car lst) "tags")))
-	  (cons (car lst) results) results)
-      (if (member tag (vector->list (assoc-ref (car lst) "tags")))     
-	  (cons (car lst) results)
-	  (recurse-get-books-with-tag tag (cdr lst) results))))
+	  (begin
+	    (set! results (cons (acons "counter" counter (car lst)) results))
+	    results)
+	  results)
+	  (if (member tag (vector->list (assoc-ref (car lst) "tags")))
+	  (begin    
+	    (set! results (cons (acons "counter" counter (car lst)) results))	    
+	    (set! counter (+ counter 1))
+	    (recurse-get-books-with-tag tag (cdr lst) results counter))
+	  (recurse-get-books-with-tag tag (cdr lst) results counter)
+	  )))
 
 
-(define (get-books-with-tag tag top-dir)
+(define (get-books-with-tag tag)
   (let* ((all-books  (get-all-books top-dir)))
-    (recurse-get-books-with-tag tag all-books '())))
+    (recurse-get-books-with-tag tag all-books '() 1)))
 
 
 (define (recurse-get-books-with-isbn isbn lst results)

@@ -15,6 +15,7 @@
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (json)
+	     #:use-module (bookstore env)
 	     #:use-module (bookstore utilities)
 	     #:export (init-suffixes)
 	     #:export (add-suffix)
@@ -22,7 +23,6 @@
 	     #:export (recurse-remove-suffix)
 	     )
 
-(define suffixes-file-name "consuffix.json")
 
 (define (get-all-suffixes-as-list top-dir)
   ;;returns a list of all tags

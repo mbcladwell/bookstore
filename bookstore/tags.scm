@@ -12,6 +12,7 @@
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (json)
+	     #:use-module (bookstore env)
 	     #:use-module (bookstore utilities)
 	     #:export (init-tags)
 	     #:export (add-tag)
@@ -20,16 +21,23 @@
 	     #:export (get-all-tags)
 	     #:export (display-tag-menu)
 	     #:export (recurse-desired-tag)
-	     #:export (query-by-tag)
+;	     #:export (query-by-tag)
 	     
 	     )
-
+;;(use-modules (bookstore env))
 ;;(define tags-file-name "contags.json")
 
 
-(define (get-all-tags db-dir tags-file-name)
+(define (get-all-tags)
   ;;returns a list of all tags
   (let* ((tags-fn (string-append db-dir tags-file-name) )
+	 (dummy (pretty-print (string-append "top-dir: " top-dir)))
+	 (dummy (pretty-print (string-append "db-dir: " db-dir)))
+	 (dummy (pretty-print (string-append "lib-dir: " lib-dir)))
+	 (dummy (pretty-print (string-append "tags-file-name: " tags-file-name)))
+	 (dummy (pretty-print (string-append "tags-fn: " tags-fn)))
+	 (dummy (pretty-print (string-append "backup: " backup-dir)))
+	 (dummy (pretty-print (string-append "tags-fn: " tags-fn)))
 	 (p  (open-input-file tags-fn))
 	 (all-tags (json->scm p))
 	 (tag-vec (assoc-ref all-tags "tags"))
@@ -50,7 +58,7 @@
 
 (define (add-tag db-dir backup-dir new-tag tags-file-name)
   ;;adds tag to controlled list of tags
-  (let* ((all-tags (get-all-tags db-dir tags-file-name))
+  (let* ((all-tags (get-all-tags db-dir))
 	 (new-tags (cons new-tag all-tags ))
 	 (new-tags-sorted (list->vector (sort-list! new-tags string<)))
 	 (old-filename (string-append db-dir tags-file-name) )
@@ -106,8 +114,9 @@
 	(get-all-tag-rows  lst))
       ))
 
-(define (display-tag-menu db-dir tags-file-name)
-  (let* ((all-tags (get-all-tags db-dir tags-file-name))
+;;(define (display-tag-menu db-dir tags-file-name)
+(define (display-tag-menu)
+  (let* ((all-tags (get-all-tags db-dir))
 	 (tags-len (length all-tags))
 	 (per-sublist (+ (floor (/ tags-len 3)) 1))
 	 (sublists (make-sublist per-sublist all-tags)))
@@ -127,8 +136,8 @@
   ;;in: first n letters of desired tag
   (let* ((dummy (display (string-append "\n\nAll tags for library " db-dir "\n")))
 	 (dummy (display "--------------------------------------------------------------------------------\n\n"))
-	 (dummy (display-tag-menu db-dir))
-	 (all-tags (get-all-tags db-dir tags-file-name))
+	 (dummy (display-tag-menu))
+	 (all-tags (get-all-tags db-dir))
 	 (in (readline "Select tag: "))
 	 (result (recurse-desired-tag in all-tags))
 	 (response (readline (string-append "Add the tag '" result "' to the book " title " ?[Y|n]")))
@@ -138,7 +147,7 @@
 
 (define (get-all-tags-as-string db-dir tags-file-name)
   (let* ((sep "========================================================================================================\n")
-	 (lst (cdr (get-all-tags db-dir tags-file-name)))
+	 (lst (cdr (get-all-tags db-dir)))
 	 (dummy (pretty-print "tags: " lst))
 	 (out sep)
 	 (dummy (while (not (string= (car lst) "") )		  
@@ -149,22 +158,3 @@
     (string-append "\n\n" out "\n\n" sep "\n")))
 
 
-(define (query-by-tag)
-  (let* ((dummy (display-logo))
-;;	 (dummy (display (get-all-tags-as-string db-dir tags-file-name)))
-	 (dummy (display-tag-menu db-dir tags-file-name))
-	 (all-tags (get-all-tags db-dir tags-file-name))
-	 (in (readline "Select tag: "))
-	 (the-tag (recurse-desired-tag in all-tags))
-	 (lst (get-books-with-tag the-tag top-dir))
-	 )
-    (if (= (length lst) 0)
-	(display "Match not found!\n\n")
-	(let* ((dummy (display-results lst))			     			     		     
-	       (what-do  (readline "(o)pen or (r)etrieve (id): "))
-	       (a (string-split what-do #\space))
-	       (action (car a))
-	       (id (string->number (cadr a)))
-	       (b (if (string= action "o")  (view-book id)))
-	       (c (if (string= action "r") (copy-book-to-readme id))))
-	  #t))))

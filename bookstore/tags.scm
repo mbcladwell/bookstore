@@ -21,23 +21,14 @@
 	     #:export (get-all-tags)
 	     #:export (display-tag-menu)
 	     #:export (recurse-desired-tag)
-;	     #:export (query-by-tag)
+	     #:export (query-for-tags)
 	     
 	     )
-;;(use-modules (bookstore env))
-;;(define tags-file-name "contags.json")
 
 
 (define (get-all-tags)
   ;;returns a list of all tags
   (let* ((tags-fn (string-append db-dir tags-file-name) )
-	 (dummy (pretty-print (string-append "top-dir: " top-dir)))
-	 (dummy (pretty-print (string-append "db-dir: " db-dir)))
-	 (dummy (pretty-print (string-append "lib-dir: " lib-dir)))
-	 (dummy (pretty-print (string-append "tags-file-name: " tags-file-name)))
-	 (dummy (pretty-print (string-append "tags-fn: " tags-fn)))
-	 (dummy (pretty-print (string-append "backup: " backup-dir)))
-	 (dummy (pretty-print (string-append "tags-fn: " tags-fn)))
 	 (p  (open-input-file tags-fn))
 	 (all-tags (json->scm p))
 	 (tag-vec (assoc-ref all-tags "tags"))
@@ -58,7 +49,7 @@
 
 (define (add-tag db-dir backup-dir new-tag tags-file-name)
   ;;adds tag to controlled list of tags
-  (let* ((all-tags (get-all-tags db-dir))
+  (let* ((all-tags (get-all-tags))
 	 (new-tags (cons new-tag all-tags ))
 	 (new-tags-sorted (list->vector (sort-list! new-tags string<)))
 	 (old-filename (string-append db-dir tags-file-name) )
@@ -116,7 +107,7 @@
 
 ;;(define (display-tag-menu db-dir tags-file-name)
 (define (display-tag-menu)
-  (let* ((all-tags (get-all-tags db-dir))
+  (let* ((all-tags (get-all-tags))
 	 (tags-len (length all-tags))
 	 (per-sublist (+ (floor (/ tags-len 3)) 1))
 	 (sublists (make-sublist per-sublist all-tags)))
@@ -124,6 +115,9 @@
 
 (define (recurse-desired-tag in lst)
   ;;figure out if the tag exist from the first few letters
+  ;;in: string possible only first few chars
+  ;;lst: list of tags
+  ;;returns the full tag e.g. ph -> philosophy
   (if (null? (cdr lst))
       (if (string=? in (substring (car lst) 0 (string-length in)))
 	  (car lst)	
@@ -132,22 +126,10 @@
 	  (car lst)	
 	  (recurse-desired-tag in (cdr lst))) ))
 
-(define (assign-tag-to-book title)
-  ;;in: first n letters of desired tag
-  (let* ((dummy (display (string-append "\n\nAll tags for library " db-dir "\n")))
-	 (dummy (display "--------------------------------------------------------------------------------\n\n"))
-	 (dummy (display-tag-menu))
-	 (all-tags (get-all-tags db-dir))
-	 (in (readline "Select tag: "))
-	 (result (recurse-desired-tag in all-tags))
-	 (response (readline (string-append "Add the tag '" result "' to the book " title " ?[Y|n]")))
-	 )
-    (if (or (string=? response "Y") (string=? response "y")) #t #f)))
-
 
 (define (get-all-tags-as-string db-dir tags-file-name)
   (let* ((sep "========================================================================================================\n")
-	 (lst (cdr (get-all-tags db-dir)))
+	 (lst (cdr (get-all-tags)))
 	 (dummy (pretty-print "tags: " lst))
 	 (out sep)
 	 (dummy (while (not (string= (car lst) "") )		  
@@ -158,3 +140,23 @@
     (string-append "\n\n" out "\n\n" sep "\n")))
 
 
+(define (recurse-query-for-tags all-tags lst out)
+  ;;lst is a string of space delimited tag beginnings "ph fi ag"
+  ;;out: '()
+  (if (null? (cdr lst))
+      (begin
+	(set! out (cons (recurse-desired-tag (car lst) all-tags) out))
+	out)
+      (begin
+	(set! out (cons (recurse-desired-tag (car lst) all-tags) out))
+	(recurse-query-for-tags all-tags (cdr lst) out))))
+
+(define (query-for-tags)
+  ;;query the user for a list of tags to add to a book
+  ;;in:   "ph" "ag" "fi"
+  ;;out: '("philosophy" "agriculture" "fiction")
+  ;;usage (query-for-tags "ph ag fi")
+  (let* ((pretags (readline "Enter space delimited tag(s) e.g. ph ag: "))
+	 (all-tags (get-all-tags))
+	 (a (car (list (string-split pretags #\space)))))
+   (recurse-query-for-tags all-tags a '()) ))

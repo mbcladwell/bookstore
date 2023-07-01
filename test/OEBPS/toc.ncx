@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN"
+ "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd"><ncx version="2005-1" xml:lang="en-US" xmlns="http://www.daisy.org/z3986/2005/ncx/">
+  <head>
+    <meta content="1" name="dtb:depth"/>
+    <meta content="0" name="dtb:totalPageCount"/>
+    <meta content="0" name="dtb:maxPageNumber"/>
+    <meta content="9781510758230" name="dtb:uid"/>
+  </head>
+  <docTitle>
+    <text>Epstein</text>
+  </docTitle>
+  <docAuthor>
+    <text>Dylan Howard</text>
+  </docAuthor>
+  <navMap>
+    <navPoint id="nav-1" playOrder="1">
+      <navLabel>
+        <text>Front Cover</text>
+      </navLabel>
+      <content src="Text/01_Cover.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-2" playOrder="2">
+      <navLabel>
+        <text>Half-Title Page</text>
+      </navLabel>
+      <content src="Text/03_Half.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-3" playOrder="3">
+      <navLabel>
+        <text>Title Page</text>
+      </navLabel>
+      <content src="Text/05_Title.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-4" playOrder="4">
+      <navLabel>
+        <text>Copyright Page</text>
+      </navLabel>
+      <content src="Text/06_Copy.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-5" playOrder="5">
+      <navLabel>
+        <text>CONTENTS</text>
+      </navLabel>
+      <content src="Text/07_Contents.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-6" playOrder="6">
+      <navLabel>
+        <text>Authors’ Note</text>
+      </navLabel>
+      <content src="Text/09_AuthorNote.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-7" playOrder="7">
+      <navLabel>
+        <text>CHAPTER 1: Autopsy of a Scandal</text>
+      </navLabel>
+      <content src="Text/10_Chapter01.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-8" playOrder="8">
+      <navLabel>
+        <text>CHAPTER 2: The Birth of a Monster</text>
+      </navLabel>
+      <content src="Text/11_Chapter02.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-9" playOrder="9">
+      <navLabel>
+        <text>CHAPTER 3: Follow the Money</text>
+      </navLabel>
+      <content src="Text/12_Chapter03.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-10" playOrder="10">
+      <navLabel>
+        <text>CHAPTER 4: Lady Ghislaine</text>
+      </navLabel>
+      <content src="Text/13_Chapter04.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-11" playOrder="11">
+      <navLabel>
+        <text>CHAPTER 5: The Little Black Book and the Lolita Express</text>
+      </navLabel>
+      <content src="Text/14_Chapter05.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-12" playOrder="12">
+      <navLabel>
+        <text>CHAPTER 6: Randy Andy</text>
+      </navLabel>
+      <content src="Text/15_Chapter06.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-13" playOrder="13">
+      <navLabel>
+        <text>CHAPTER 7: Diary of a Sex Slave</text>
+      </navLabel>
+      <content src="Text/16_Chapter07.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-14" playOrder="14">
+      <navLabel>
+        <text>CHAPTER 8: Donald Trump and the Palm Beach Pedophile</text>
+      </navLabel>
+      <content src="Text/17_Chapter08.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-15" playOrder="15">
+      <navLabel>
+        <text>CHAPTER 9: Epstein: In the Victims’ Own Words</text>
+      </navLabel>
+      <content src="Text/18_Chapter09.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-16" playOrder="16">
+      <navLabel>
+        <text>CHAPTER 10: “He’s Intelligence”</text>
+      </navLabel>
+      <content src="Text/19_Chapter10.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-17" playOrder="17">
+      <navLabel>
+        <text>CHAPTER 11: The Hunt for Justice</text>
+      </navLabel>
+      <content src="Text/20_Chapter11.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-18" playOrder="18">
+      <navLabel>
+        <text>CHAPTER 12: The Smartest Men in the World</text>
+      </navLabel>
+      <content src="Text/21_Chapter12.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-19" playOrder="19">
+      <navLabel>
+        <text>CHAPTER 13: Caught</text>
+      </navLabel>
+      <content src="Text/22_Chapter13.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-20" playOrder="20">
+      <navLabel>
+        <text>CHAPTER 14: Dead or Gone</text>
+      </navLabel>
+      <content src="Text/23_Chapter14.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-21" playOrder="21">
+      <navLabel>
+        <text>CHAPTER 15: Once Upon a Time in Russia</text>
+      </navLabel>
+      <content src="Text/24_Chapter15.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-22" playOrder="22">
+      <navLabel>
+        <text>CHAPTER 16: The Coconspirators</text>
+      </navLabel>
+      <content src="Text/25_Chapter16.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-23" playOrder="23">
+      <navLabel>
+        <text>Epilogue</text>
+      </navLabel>
+      <content src="Text/26_Epilogue.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-24" playOrder="24">
+      <navLabel>
+        <text>Plates 1</text>
+      </navLabel>
+      <content src="Text/27_Insert_A.xhtml"/>
+    </navPoint>
+    <navPoint id="nav-25" playOrder="25">
+      <navLabel>
+        <text>Plates 2</text>
+      </navLabel>
+      <content src="Text/28_Insert_B.xhtml"/>
+    </navPoint>
+  </navMap>
+</ncx>

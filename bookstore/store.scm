@@ -26,21 +26,6 @@
 	     )
 
 
-
-;; (define (set-vars)
-;;   (let* ((p  (open-input-file  config-file-name))
-;; 	 (all-vars (json->scm p)))
-;;           (begin
-;; 	    (set! top-dir (assoc-ref all-vars "top-dir" ))
-;; 	    (set! lib-dir (string-append top-dir "lib/")) ;; home of db
-;; 	    (set! db-dir (string-append top-dir "db/")) ;; home of book.json
-;; 	    (set! backup-dir (string-append top-dir "backup/"))
-;; 	    (set! deposit-dir (string-append top-dir "deposit/"))  ;; out of z-lib ready to be processed
-;; 	    (set! dest-dir (string-append top-dir "dest/")) ;; final destination directory probably ~/syncd/library/files
-;; 	    (set! withdraw-dir (string-append top-dir "withdraw/")))
-;; 		;;  (set! db-obj (dbi-open "sqlite3" (string-append lib-dir lib-file-name))))		                                                         )
-;; 	 ))
-
 ;;will handle the following author spellings
 ;; first last
 ;; first last and first last 
@@ -150,24 +135,6 @@
 ;; 	  #t))))
 
 
-;; (define (display-results lst)
-;;   ;;list is a list of books from db
-;;   ;;book.id is what will have to be typed to view/move a book
-;;   (if (null? (cdr lst))
-;;       (let* (;(dummy (dbi-query db-obj (string-append "SELECT book.id, book.title FROM book WHERE  book.id = '" (number->string (car lst)) "'")))
-;; 	     ;(ret (dbi-get_row db-obj))			 
-;; 	     (dummy (display (string-append  (assoc-ref (car lst) "id") " | " (assoc-ref (car lst) "title")  "\n\n")))
-;; 	     )
-;; 	#t)
-;;       (let* (;(dummy (dbi-query db-obj (string-append "SELECT book.id, book.title FROM book WHERE  book.id = '" (number->string (car (car lst))) "'")))
-;; 	     ;(ret (dbi-get_row db-obj))			 
-;; 	     (dummy (display (string-append (assoc-ref (car lst) "id") " | " (assoc-ref (car lst) "title")  "\n")))
-;; 	     )
-;; 	(display-results (cdr lst)))	))
-
-
-
-
 (define (init-library)
   ;;str is the top level directory top-dir e.g. /home/mbc/library
   ;;this method is called after a check has been performed to insure
@@ -183,7 +150,6 @@
 ;;      (system (string-append "mkdir " top-dir " " top-dir "/db " " " top-dir "/lib " top-dir "/backup " top-dir "/deposit " top-dir "/withdraw "))
       (system (string-append "mkdir " top-dir " " lib-dir " " db-dir " " backup-dir " " deposit-dir " " withdraw-dir ))
       (make-config-file json-output)
-      (set-vars)
       (init-db-json db-dir)
       (init-tags db-dir)
       (init-suffixes db-dir)
@@ -191,8 +157,6 @@
     )))
 
 
-
-  
 
 (define (top)
  (let* (

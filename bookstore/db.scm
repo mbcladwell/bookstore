@@ -20,9 +20,12 @@
 	     #:export (get-books-with-title)
 	     #:export (get-books-for-author)
 	     #:export (get-books-with-tag)
-	     #:export (get-books-with-isbn)
-	     #:export (get-books-with-id)
+	     #:export (get-book-with-isbn)
+	     #:export (get-book-with-id)
 	     #:export (cons-books-to-lib)
+	     #:export (assign-tags-to-book)
+	   ;  #:export (cons-books-to-lib)
+	     
 	     )
 
 
@@ -30,7 +33,7 @@
   ;;auths and tags are vectors
    `(("title" . ,title)("author" . ,auths)("fname" . ,fname)("id" . ,id)("ext" . ,ext)("tags" . ,tags)("isbn" . ,isbn)))
 
-(define (get-all-books top-dir);;as list
+(define (get-all-books);;as list
   (let* ((books-file-name  (string-append top-dir "db/books.json")) 
 	 (p  (open-input-file books-file-name))
 	 (all-books (json->scm p))
@@ -84,13 +87,13 @@
       ))
 
 (define (get-books-with-title tits top-dir)
-  (let* ((all-books  (get-all-books top-dir)))
+  (let* ((all-books  (get-all-books)))
     (recurse-get-books-with-title tits all-books '())))
 
 
 
 (define (get-books-for-author aut top-dir)
-  (let* ((all-books  (get-all-books top-dir)))
+  (let* ((all-books  (get-all-books)))
     (recurse-get-books-for-author aut all-books '())))
 
 ;;(vector-index            #("Dodo Doodoo" "Plain Jane" "Joer Blow"))
@@ -110,15 +113,16 @@
 
 (define (recurse-get-books-with-tag tag lst results counter)
   ;;results is a list of books for given tag
+  ;;store the counter as a string
   (if (null? (cdr lst))
       (if (member tag (vector->list (assoc-ref (car lst) "tags")))
 	  (begin
-	    (set! results (cons (acons "counter" counter (car lst)) results))
+	    (set! results (cons (acons "counter" (number->string counter) (car lst)) results))
 	    results)
 	  results)
 	  (if (member tag (vector->list (assoc-ref (car lst) "tags")))
 	  (begin    
-	    (set! results (cons (acons "counter" counter (car lst)) results))	    
+	    (set! results (cons (acons "counter" (number->string counter) (car lst)) results))	    
 	    (set! counter (+ counter 1))
 	    (recurse-get-books-with-tag tag (cdr lst) results counter))
 	  (recurse-get-books-with-tag tag (cdr lst) results counter)
@@ -126,38 +130,56 @@
 
 
 (define (get-books-with-tag tag)
-  (let* ((all-books  (get-all-books top-dir)))
+  (let* ((all-books  (get-all-books)))
     (recurse-get-books-with-tag tag all-books '() 1)))
 
 
-(define (recurse-get-books-with-isbn isbn lst results)
+(define (recurse-get-book-with-isbn isbn lst results)
   ;;results is a list of books for given isbn
   (if (null? (cdr lst))
       (if (string=? (assoc-ref (car lst) "isbn") isbn) (cons (car lst) results) results)       
       (if (string=? (assoc-ref (car lst) "isbn") isbn)
 	  (cons (car lst) results)
-	  (recurse-get-books-with-isbn isbn (cdr lst) results))
+	  (recurse-get-book-with-isbn isbn (cdr lst) results))
       ))
 
-(define (get-books-with-isbn isbn top-dir)
-  (let* ((all-books  (get-all-books top-dir)))
+(define (get-book-with-isbn isbn top-dir)
+  (let* ((all-books  (get-all-books)))
     (recurse-get-books-with-isbn isbn all-books '())))
 
 
 
-(define (recurse-get-books-with-id id lst results)
+(define (recurse-get-book-with-id id lst results)
   ;;results is a list of books for given id
   (if (null? (cdr lst))
       (if (string=? (assoc-ref (car lst) "id") id) (cons (car lst) results) results)       
       (if (string=? (assoc-ref (car lst) "id") id)
 	  (cons (car lst) results)
-	  (recurse-get-books-with-id id (cdr lst) results))
+	  (recurse-get-book-with-id id (cdr lst) results))
       ))
 
-(define (get-books-with-id id top-dir)
-  (let* ((all-books  (get-all-books top-dir)))
-    (recurse-get-books-with-id id all-books '())))
+(define (get-book-with-id id )
+  (let* ((all-books  (get-all-books)))
+    (recurse-get-book-with-id id all-books '())))
 
 
+
+(define (assign-tags-to-book id tta)
+  ;;id: the hash of the book
+  ;;tta: tags to asign as a list
+  (let* (
+	 (orig (car (get-book-with-id id)))
+	 (orig-tags (vector->list (assoc-ref orig "tags")))
+	 (new-book orig)
+	 (new-tags (list->vector(append orig-tags tta)))
+	 (new-book (assoc-set! new-book "tags" new-tags)))
+    new-book
+    ))
+
+(define (substitute-new-for-old-book new old)
+  ;;updates the main library with edited book
+  (let* ((all-books (get-all-books))
+	 (mod-books (cons new (delete old all-books))) )
+    mod-books))
 
 

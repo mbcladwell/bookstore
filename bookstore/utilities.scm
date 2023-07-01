@@ -50,13 +50,20 @@
 
 (define (make-backup src-dir file-name backup-dir)
   ;;src-dir should end with /
-  ;;(make-backup (string-append top-dir "lib") "books.json" (string-append top-dir "backup"))
-  
+  ;;(make-backup db-dir "books.json" backup-dir )
   (let* ((src-file-name (string-append src-dir file-name))
 	 (pref (date->string  (current-date) "~Y~m~d~H~M~S"))
 	 (backed-up-filename (string-append backup-dir pref "-" file-name))
 	 (command (string-append "cp " src-file-name " " backed-up-filename)))
      (system command)))
+
+(define (write-new-db new-all-books)
+;;backs up then writes new books.json
+  (let* ((dummy (make-backup db-dir "books.json" backup-dir))
+	 )
+    )
+  )
+
 
 
 (define (find-occurences-in-string query the-string)

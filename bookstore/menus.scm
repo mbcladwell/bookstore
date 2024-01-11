@@ -14,12 +14,16 @@
 	     #:use-module (bookstore env)
 	     #:use-module (bookstore tags)
 	     #:use-module (bookstore db)
-	 ;    #:use-module (bookstore store)
+	     #:use-module (bookstore utilities)
+	     #:use-module (bookstore suffix)
 	     #:export (display-logo)
 	     #:export (display-main-menu)
+	     #:export (display-results)
+	     #:export (display-results-header)
 	     #:export (add-tag-menu-item)
 	     #:export (add-suffix-menu-item)
 	     #:export (display-query-submenu)
+	     #:export (display-init-menu)
 ;	     #:export ()
 ;	     #:export ()
 	     
@@ -36,7 +40,7 @@
      (display "  |  _ < / _ \\ / _ \\| |/ /\\___ \\| __/ _ \\| '__/ _ \\\n")
      (display "  | |_) | (_) | (_) |   < ____) | || (_) | | |  __/\n")
      (display "  |____/ \\___/ \\___/|_|\\_\\_____/ \\__\\___/|_|  \\___|\n")
-     (display "  ~Urbit friendly  \n\n")
+     (display "  ~Urbit compatible  \n\n")
      (display (string-append "Library: " top-dir "\n\n"))
      ))
 
@@ -51,13 +55,28 @@
     (display "Ctrl-z to exit\n\n")
   ))
 
+(define (display-init-menu)
+  (begin
+    (display-logo)
+    (display "Storage method\n")
+    (display "==============\n")
+    (display "1 File\n")
+    (display "2 Oracle S3\n")
+    (display "3 AWS S3\n")
+    (display "4 Minio local\n")
+    (display "5 Minio remote\n\n")
+    
+    (display "Ctrl-z to exit\n\n")
+  ))
+
+
 (define (add-tag-menu-item)
-  (let* ((result (readline "Enter tag to add to controlled list: ")))
-    (add-tag db-dir backup-dir result)))
+  (let* ((a-tag (readline "Enter tag to add to controlled list: ")))
+    (add-tag-to-controlled-list a-tag)))
 
 (define (add-suffix-menu-item)
   (let* ((result (readline "Enter suffix to add to controlled list: ")))
-    (add-suffix db-dir backup-dir result)))
+    (add-suffix result)))
 
 (define (display-query-submenu)
   (let* (
@@ -69,8 +88,8 @@
 	 (selection (readline "Selection: "))
 	 )
      (cond ((string= selection "1") (query-by-tag))
- 	 ((string= selection "2") (process-deposit top-dir))
-	 ((string= selection "3") (add-tag-menu-item))
+ 	 ((string= selection "2") (query-by-title))
+	 ((string= selection "3") (query-by-author))
     )))
 
 
@@ -83,9 +102,14 @@
 	    (find-element-with-counter (cdr lst) counter))
       )))
 
-  
+
+
+
+
 
 (define (query-by-tag)
+  ;;query-for-tags is different - it fills out tag shortcuts
+  ;;this is a menu item
   (let* ((dummy (display-logo))
 ;;	 (dummy (display (get-all-tags-as-string db-dir tags-file-name)))
 	 (dummy (display-tag-menu))
@@ -113,25 +137,99 @@
 			(the-tags (query-for-tags))
 			(new-book (assign-tags-to-book id the-tags))
 			(orig (car (get-book-with-id id)))
-			(mod-all-books (substitute-new-for-old-book new old))
+			(mod-all-books (substitute-new-for-old-book new-book orig))
 			)
-		  (substitute-new-for-old-book new old))		 
- 	;;	 ((string= action "w") #f)
+		  (write-new-db mod-all-books)))		 
+ 		 ((string= action "w") 
+		  (let* (
+	      		 (orig (car (get-book-with-id id)))
+		;	 (dummy (pretty-print orig))
+			)
+		  (move-to-withdraw orig))			  
 		 )
 		)))))
 
 
-	  ;;      (b (if (string= action "t") ;;add a tag to a book
-	  ;; 	      (begin
-	  ;; 		(view-book id))
-	  ;; 	      )
-	  ;; 	  (c (if (string= action "w")
-	  ;; 		 (begin
-	  ;; 		   (copy-book-to-readme id))
-	  ;; 		 )
-	  ;; 	     )
-		  
-	  ;; #t))))
+(define (query-by-author)
+  ;;query-for-tags is different - it fills out tag shortcuts
+  ;;this is a menu item
+  (let* ((dummy (display-logo))
+	 (in (readline "Select author: "))
+	 (lst (get-books-for-author in))
+	 )
+    (if (= (length lst) 0)
+	(display "Match not found!\n\n")
+	(let* ((dummy (display-results-header))
+	       (dummy (display-results (reverse lst)))
+	       
+	       (dummy (display "\nActivities: t - add tag"))
+	       (dummy (display "\n            w - withdraw"))
+	       (dummy (display "\nIndicate as a doublet e.g  '1 t' to add tags to book 1"))	       
+	       (what-do  (readline "\nAction: [1 t]: "))
+	       (a (string-split what-do #\space))
+               (abook  (find-element-with-counter lst (car a)))
+	       (id (assoc-ref abook "id"))
+	       (action (cadr a))	       
+	       )	  
+	  (cond ((string= action "t")
+		 (let* ((dummy (display-tag-menu))
+			(the-tags (query-for-tags))
+			(new-book (assign-tags-to-book id the-tags))
+			(orig (car (get-book-with-id id)))
+			(mod-all-books (substitute-new-for-old-book new-book orig))
+			)
+		  (write-new-db mod-all-books)))		 
+ 		 ((string= action "w") 
+		  (let* (
+	      		 (orig (car (get-book-with-id id)))
+		;	 (dummy (pretty-print orig))
+			)
+		  (move-to-withdraw orig))			  
+		 )
+		)))))
+
+
+(define (query-by-title)
+  ;;
+  ;;this is a menu item
+  (let* ((dummy (display-logo))
+	 (in (readline "Select title: "))
+	 (lst (get-books-with-title in))
+	 )
+    (if (= (length lst) 0)
+	(display "Match not found!\n\n")
+	(let* ((dummy (display-results-header))
+	      ; (dummy (pretty-print lst))
+	       (dummy (display-results (reverse lst)))
+	       
+	       (dummy (display "\nActivities: t - add tag"))
+	       (dummy (display "\n            w - withdraw"))
+	       (dummy (display "\nIndicate as a doublet e.g  '1 t' to add tags to book 1"))	       
+	       (what-do  (readline "\nAction: [1 t]: "))
+	       (a (string-split what-do #\space))
+               (abook  (find-element-with-counter lst (car a)))
+	       (dummy (pretty-print abook))
+	       (id (assoc-ref abook "id"))
+	       (action (cadr a))	       
+	       )	  
+	  (cond ((string= action "t")
+		 (let* ((dummy (display-tag-menu))
+			(the-tags (query-for-tags))
+			(new-book (assign-tags-to-book id the-tags))
+			(orig (car (get-book-with-id id)))
+			(mod-all-books (substitute-new-for-old-book new-book orig))
+			)
+		  (write-new-db mod-all-books)))		 
+ 		 ((string= action "w") 
+		  (let* (
+	      		 (orig (car (get-book-with-id id)))
+		;	 (dummy (pretty-print orig))
+			)
+		  (move-to-withdraw orig))			  
+		 )
+		)))))
+
+
 
 (define (display-results-header)
   (begin

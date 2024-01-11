@@ -11,17 +11,28 @@
 	     #:use-module (ice-9 textual-ports)
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
+	     #:use-module (web response)
+	     #:use-module (web request)
+	     #:use-module (web uri)
+	     #:use-module (web client)
+	     #:use-module (rnrs bytevectors) 
 	     #:use-module (bookstore titaut)
 	     #:use-module (bookstore db)
+	     #:use-module (bookstore env)
+	     #:use-module (json)
+	     #:export (send-to-bucket)
 	     #:export (display-logo)
 	     #:export (display-main-menu)
 	     #:export (find-occurences-in-string)
 	     #:export (any-not-false?)
 	     #:export (recurse-move-files)
-	     #:export (make-backup)
+	     #:export (make-backup-file-name)
 	     #:export (get-rand-file-name)
 	     #:export (get-file-extension)
 	     #:export (process-deposit)
+	     #:export (move-to-withdraw)
+	     #:export (get-json-from-bucket)
+	    
 	     )
 
 (define (get-rand-file-name pre suff)
@@ -48,21 +59,48 @@
 	(recurse-move-files (cdr lst) top-dir))))
 
 
-(define (make-backup src-dir file-name backup-dir)
-  ;;src-dir should end with /
-  ;;(make-backup db-dir "books.json" backup-dir )
-  (let* ((src-file-name (string-append src-dir file-name))
-	 (pref (date->string  (current-date) "~Y~m~d~H~M~S"))
-	 (backed-up-filename (string-append backup-dir pref "-" file-name))
-	 (command (string-append "cp " src-file-name " " backed-up-filename)))
-     (system command)))
+(define (make-backup-file-name orig-file-name)	 
+     (string-append (date->string  (current-date) "~Y~m~d~H~M~S-") orig-file-name))
 
-(define (write-new-db new-all-books)
-;;backs up then writes new books.json
-  (let* ((dummy (make-backup db-dir "books.json" backup-dir))
-	 )
-    )
-  )
+
+(define (get-json-from-bucket str)
+  ;; str: books tags suffixes
+  (let* ((lst (cond
+	       ((string= str "books") '("books.json" "books"))
+		((string= str "tags") '("contags.json" "tags"))
+		((string= str "suffixes") '("consuffix.json" "suffixes"))))
+	 (file-name (car lst))
+	 (query-term (cadr lst))
+	 (url (string-append base-uri "/" bucket "/" file-name))
+	 (the-body   (receive (response-status response-body)
+			 (http-request url
+				       #:method 'GET
+				       #:port (open-socket-for-uri url #:verify-certificate? #f))
+		       response-body))
+	 (response  (json-string->scm (utf8->string the-body)))
+	 (vec (assoc-ref response query-term)))
+    (vector->list vec) ))
+
+(define (send-to-bucket filename data)
+  (let* ((url (string-append base-uri "/" bucket "/" filename))
+	 (the-body   (receive (response-status response-body)
+			 (http-request url
+				       #:method 'PUT
+				       #:body (string->utf8 data)
+				       #:port (open-socket-for-uri url #:verify-certificate? #f))
+		       response-body))
+	 (response  (utf8->string the-body)))
+  response))
+
+  
+
+;; (define (make-backup-file-name orig-file-name)
+;;   (let* ((src-file-name (string-append src-dir file-name))
+;; 	 (pref (date->string  (current-date) "~Y~m~d~H~M~S"))
+;; 	 (backed-up-filename (string-append backup-dir pref "-" file-name))
+;; 	 (command (string-append "cp " src-file-name " " backed-up-filename)))
+;;      (system command)))
+
 
 
 
@@ -81,6 +119,15 @@
 	    (if (equal? (car x) #f) (any-not-false? (cdr x)) #t)))
 
 
+(define (move-to-withdraw book)
+  ;;withdraw a book by copying it with a new name from
+  ;;lib to withdraw
+  (let* ((id (assoc-ref book "id"))
+	 (ext (assoc-ref book "ext"))
+	 (title (assoc-ref book "title"))
+	 (command (string-append "cp " lib-dir id "." ext " '" withdraw-dir title "." ext "'"))
+	 )
+   (system command)))
 
 
 ;;compund list of new books:

@@ -5,7 +5,7 @@
 ;;  (add-to-load-path "/home/mbc/projects/bookstore/test")
 ;;  (add-to-load-path "/home/mbc/.guix-profile/share/guile/site/3.0")
 ;;  (add-to-load-path "/home/mbc/.guix-profile/share/2.2")
-;;  (add-to-load-path "/home/mbc/projects/bookstore")
+  (add-to-load-path "/home/mbc/projects/bookstore")
  (define-module (test)
  #:use-module (web client)
 	     #:use-module (web response)
@@ -27,25 +27,25 @@
 	     #:use-module (ice-9 textual-ports)
 	     #:use-module (gnutls)
 	     #:use-module (json)
-	     #:use-module (gcrypt hash)
-	     #:use-module (ice-9 iconv) ;;bytevector->string
+	     #:use-module (ice-9 iconv)
 	   ;;  #:use-module (hashing sha-2)
 	     #:use-module (rnrs bytevectors) 
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
-	     ;; #:use-module (bookstore env)
-	     ;; #:use-module (bookstore utilities)
-	     ;; #:use-module (bookstore init)
-	     ;; #:use-module (bookstore tags)
-	     ;; #:use-module (bookstore store)
-	     ;; #:use-module (bookstore titaut)
-	     ;; #:use-module (bookstore suffix)
-	     ;; #:use-module (bookstore db)
-	     ;; #:use-module (bookstore menus)
-	     ;; #:use-module (bookstore junk)
+	     #:use-module (bookstore env)
+	     #:use-module (bookstore utilities)
+	     #:use-module (bookstore init)
+	     #:use-module (bookstore tags)
+	     #:use-module (bookstore store)
+	     #:use-module (bookstore titaut)
+	     #:use-module (bookstore suffix)
+	     #:use-module (bookstore db)
+	     #:use-module (bookstore menus)
+	     #:use-module (bookstore junk)
 	     )
 
 ;;guix shell --container --network --expose=/etc/ssl/certs=/etc/ssl/certs guile guile-json guile-readline guile-gnutls -- guile -L . ./test.scm
+;;guix shell --container --pure -N -P -m manifest.scm -- guile ./test.scm
 
 (define my-read-url "https://objectstorage.us-ashburn-1.oraclecloud.com/p/6eWiHuS3TGffX_cG-Mnz7RcBtcvHeiIBHDt4TVwErO_TSSYX_Avw-9nLG1hCZVZ1/n/idd2jj2zatqq/b/poctyr-bidbes/o/contags.json")
 
@@ -91,21 +91,21 @@
 
 (define my-json  (scm->json-string '(("target" . "oracles3")("top-dir" . "")("base-uri" . "skjdfk")("namespace" . "popo")("pawrite" . "mnjudydhhhdhd"))))
 
-;; (define (dbload)
+(define (dbload)
 
-;;    (let* ((url my-write-url)
-;; 	;; (url "http://127.0.0.1:9000/bookstore/contags.json")
-;; ;;	 (new-json (scm->json-string (acons "tags"  new-tags-sorted '())))	 
-;; ;;	 (the-body   (receive (response-status response-body)
-;; ;;			(http-request url #:method 'PUT #:body #f #:port (open-socket-for-uri url)) response-body))
-;;         (the-body   (receive (response-status response-body)
-;; 			(http-request url #:method 'PUT #:body my-json  #:port (open-socket-for-uri url)) response-body))
-;; 	 (response  (utf8->string the-body))
-;; ;;	 (tag-vec (json-string->scm all-tags))
-;; ;;	 (vec (assoc-ref tag-vec "tags"))
-;; 	 )
-;;     response
-;;     ))
+   (let* ((url my-write-url)
+	;; (url "http://127.0.0.1:9000/bookstore/contags.json")
+;;	 (new-json (scm->json-string (acons "tags"  new-tags-sorted '())))	 
+;;	 (the-body   (receive (response-status response-body)
+;;			(http-request url #:method 'PUT #:body #f #:port (open-socket-for-uri url)) response-body))
+	 (the-body   (receive (response-status response-body)
+			(http-request url #:method 'PUT #:body my-json  #:port (open-socket-for-uri url)) response-body))
+	 (response  (utf8->string the-body))
+;	 (tag-vec (json-string->scm all-tags))
+;	 (vec (assoc-ref tag-vec "tags"))
+	 )
+    response
+    ))
 
 
 
@@ -115,17 +115,16 @@
 	; (a   (process-file "A Silly book 3 by Dum Dee, Zee Zeeow, Kiki Dodo - manybooks.txt" top-dir))
 					; (b (wrangle-cmpd-lst-to-gs-compatible-lst (list a) '()))
 
-	 (a    (get-all-tags-minio) )
+	;; (a    (get-all-tags-minio) )
 	;; (b (update-tags-minio a "my-new-tagg"))
-	 	 (b (scm->json-string (utf8->string a)))
-	 ;; (a (dbload))
-	;; (a (file-hash 1 "./Epstein_Dead.epub"))
+	 ;;	 (b (scm->json-string (utf8->string a)))
+	 (a (dbload))
 	 (stop-time (current-time time-monotonic))
 	 (elapsed-time (time-second (time-difference stop-time start-time)))
 	 
 	 )
     (begin
-      (pretty-print   b )
+      (display  a)
       
       (pretty-print (string-append "Shutting down after " (number->string elapsed-time) " seconds of use."))
     )))

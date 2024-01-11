@@ -12,7 +12,7 @@
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (json)
-	     #:export (init-db-json)
+	     #:export (get-db-json)
 	     #:export (init-library)
 	     #:export (make-config-file)
 	     #:export (config-file-name)
@@ -24,7 +24,7 @@
 (define (make-config-file content)
   ;;config file name is fixed
   ;;c: contents of file
-  (let* (;;(config-file-name (string-append (getenv "HOME") "/.config/bookstore/config.json"))
+  (let* ((config-file-name (string-append (getenv "HOME") "/.config/bookstore/config.json"))
 	 (dummy (if (access? config-file-name F_OK)
 		    (system (string-append "rm " config-file-name))		    
 		    (system (string-append "mkdir " (getenv "HOME") "/.config/bookstore"))))
@@ -42,7 +42,7 @@
 ;;consuffix.json {"suffixes":["(z-lib)","libgen"]}
 
 
-(define (init-db-json db-dir)
+(define (get-db-json)
   ;;initialize the main book database
   (let* ((tags1 #("mytag1" "mytag2" "mytag3"))
 	 (tags2 #("mytag4" "mytag5" "mytag2"))	 
@@ -57,12 +57,13 @@
 	 (all-books1 `#(,book1 ,book2 ,book3 ,book4 ,book5 ,book6))
 	 (element1 `(("books" . ,all-books1)))
 	 (content (scm->json-string element1))
-	 (p  (open-output-file (string-append db-dir "books.json")))	
+;;	 (p  (open-output-file (string-append db-dir "books.json")))	
 	 )    
     (begin
       (pretty-print content)
-     (put-string p content)
-      (force-output p)
+   ;;   (put-string p content)      
+   ;; (force-output p)
+      content
       )))
 
 ;;(init-db-json)

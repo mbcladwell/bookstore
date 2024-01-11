@@ -1,6 +1,3 @@
- ;;remove suffixes in filenames when the filename is used as a source
-  ;;of title and author
-
 (define-module (bookstore suffix)
  	     #:use-module (srfi srfi-19)   ;; date time
 	     #:use-module (srfi srfi-1)  ;;list searching; delete-duplicates in list 
@@ -17,16 +14,18 @@
 	     #:use-module (json)
 	     #:use-module (bookstore env)
 	     #:use-module (bookstore utilities)
-	     #:export (init-suffixes)
+	     #:export (get-suffixes-json)
 	     #:export (add-suffix)
 	     #:export (get-all-suffixes-as-list)
 	     #:export (recurse-remove-suffix)
 	     )
 
+ ;;remove suffixes in filenames when the filename is used as a source
+  ;;of title and author
 
 (define (get-all-suffixes-as-list top-dir)
   ;;returns a list of all tags
-  (let* ((suf-fn (string-append top-dir "db/" suffixes-file-name) )
+  (let* ((suf-fn (string-append db-dir suffixes-file-name) )
 	 (p  (open-input-file suf-fn))
 	 (all-suffs (json->scm p))
 	 (suf-vec (assoc-ref all-suffs "suffixes"))
@@ -34,16 +33,19 @@
     (vector->list suf-vec)     
     ))
 
-(define (init-suffixes db-dir)
+(define (get-suffixes-json)
   ;;initialize the main tag json
-  (let* ((suffs-fn (string-append db-dir suffixes-file-name) )
-	 (p  (open-output-file suffs-fn))
+  (let* (
+	 ;;(suffs-fn (string-append db-dir suffixes-file-name) )
+	 ;;(p  (open-output-file suffs-fn))
 	 (suffixes #("(z-lib.org)" "manybooks" "Project Gutenberg"))
 	 (content (scm->json-string `(("suffixes" . ,suffixes))))
 	 )    
-    (begin
-      (put-string p content)
-      (force-output p))))
+   ;; (begin
+     ;; (put-string p content)
+   ;; (force-output p))    
+  content
+))
 
 (define (remove-suffix str suffix)
   (let* ((len-str (string-length str))
@@ -64,7 +66,7 @@
 	(set! str (remove-suffix str (car lst)))
       (recurse-remove-suffix (cdr lst) str))))
 
-(define (add-suffix db-dir backup-dir new-suffix)
+(define (add-suffix new-suffix)
   ;;adds suffix to controlled list of suffixes
   (let* ((all-suffixes (get-all-suffixes-as-list db-dir))
 	 (new-suffixes (cons new-suffix all-suffixes ))

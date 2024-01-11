@@ -14,6 +14,7 @@
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (json)
 	     #:use-module (bookstore env)
+	     #:use-module (bookstore utilities)
 	     #:export (make-book-list-element)
 	     #:export (make-json-for-gs)
 	     #:export (get-all-books)
@@ -24,8 +25,9 @@
 	     #:export (get-book-with-id)
 	     #:export (cons-books-to-lib)
 	     #:export (assign-tags-to-book)
-	   ;  #:export (cons-books-to-lib)
-	     
+	     #:export (add-tags-to-book)
+	     #:export (write-new-db)
+	     #:export (substitute-new-for-old-book)	     
 	     )
 
 
@@ -77,35 +79,59 @@
 
 
 
-(define (recurse-get-books-with-title titl lst results)
+(define (recurse-get-books-with-title titl lst results counter)
   ;;results is a list of books for given title
   (if (null? (cdr lst))
-      (if (string=? (assoc-ref (car lst) "title") titl) (cons (car lst) results) results)       
-      (if (string=? (assoc-ref (car lst) "title") titl)
-	  (cons (car lst) results)
-	  (recurse-get-books-with-title titl (cdr lst) results))
+      (if (string-contains-ci (assoc-ref (car lst) "title") titl)
+	  (begin
+	    (set! results (cons (acons "counter" (number->string counter) (car lst)) results))
+	    results)
+	  results)
+      (if (string-contains-ci (assoc-ref (car lst) "title") titl)
+	  (begin
+	    (set! results (cons (acons "counter" (number->string counter) (car lst)) results))	    
+	    (set! counter (+ counter 1))
+	    (recurse-get-books-with-title titl (cdr lst) results counter))
+	  (recurse-get-books-with-title titl (cdr lst) results counter))
       ))
 
-(define (get-books-with-title tits top-dir)
+(define (get-books-with-title tits)
   (let* ((all-books  (get-all-books)))
-    (recurse-get-books-with-title tits all-books '())))
+    (recurse-get-books-with-title tits all-books '() 1)))
 
 
 
-(define (get-books-for-author aut top-dir)
+(define (get-books-for-author aut)
   (let* ((all-books  (get-all-books)))
-    (recurse-get-books-for-author aut all-books '())))
+    (recurse-get-books-for-author aut all-books '() 1)))
 
 ;;(vector-index            #("Dodo Doodoo" "Plain Jane" "Joer Blow"))
 
-(define (recurse-get-books-for-author auth lst results)
+;; (define (recurse-get-books-for-author auth lst results)
+;;   ;;results is a list of books for given author
+;;   (if (null? (cdr lst))
+;;       (if (member auth (vector->list (assoc-ref (car lst) "author")))
+;; 	  (cons (car lst) results) results)
+;;       (if (member auth (vector->list (assoc-ref (car lst) "author")))     
+;; 	  (cons (car lst) results)
+;; 	  (recurse-get-books-for-author auth (cdr lst) results))))
+
+
+(define (recurse-get-books-for-author auth lst results counter)
   ;;results is a list of books for given author
   (if (null? (cdr lst))
-      (if (member auth (vector->list (assoc-ref (car lst) "author")))
-	  (cons (car lst) results) results)
-      (if (member auth (vector->list (assoc-ref (car lst) "author")))     
-	  (cons (car lst) results)
-	  (recurse-get-books-for-author auth (cdr lst) results))))
+      (if (string-contains (apply string-append (vector->list (assoc-ref (car lst) "author"))) auth)
+	  (begin
+	    (set! results (cons (acons "counter" (number->string counter) (car lst)) results))
+	    results)	  
+	  results)
+      (if (string-contains (apply string-append (vector->list (assoc-ref (car lst) "author"))) auth)
+	  (begin
+	    (set! results (cons (acons "counter" (number->string counter) (car lst)) results))
+	     (set! counter (+ counter 1))
+	    (recurse-get-books-for-author auth (cdr lst) results counter))
+	  (recurse-get-books-for-author auth (cdr lst) results counter)
+	  )))
 
 
 
@@ -176,10 +202,34 @@
     new-book
     ))
 
+(define (add-tags-to-book tags book)
+  ;;adds tags to a book
+  ;;book is the book item as an element
+  (let* ((old-tags (vector->list (assoc-ref book "tags")))
+	 (new-tags (list->vector (append tags old-tags)))
+	 (new-book (assoc-set! book "tags" new-tags)))
+new-book))
+
+
+
+
 (define (substitute-new-for-old-book new old)
-  ;;updates the main library with edited book
+  ;;updates the main library list with edited book
   (let* ((all-books (get-all-books))
 	 (mod-books (cons new (delete old all-books))) )
     mod-books))
+
+
+(define (write-new-db new-all-books)
+;;backs up then writes new books.json
+  (let* ((dummy (make-backup db-dir "books.json" backup-dir))
+	 (a (list->vector new-all-books))
+	 (content (scm->json-string `(("books" .  ,a))))
+	 (db-json (string-append db-dir lib-file-name ))
+	 (dummy (system (string-append "rm " db-json)))
+	 (out-port (open-output-file db-json))
+	 (dummy (put-string out-port content)))
+    (force-output out-port))
+  )
 
 

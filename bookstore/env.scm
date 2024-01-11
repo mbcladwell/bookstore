@@ -16,6 +16,14 @@
 	     #:export (lib-file-name)
 	     #:export (tags-file-name)
 	     #:export (suffixes-file-name)
+	     #:export (namespace)
+	     #:export (bucket)
+	     #:export (paread)
+	     #:export (pawrite)
+	     #:export (base-uri)
+	     #:export (withdraw)
+	     #:export (target)
+	    ;; #:export ()
 	     )
 
 (define doc-viewer "ebook-viewer") ;;from Calibre
@@ -35,10 +43,28 @@
       (pretty-print (string-append "Expected configuration file " config-file-name " does not exist!"))))
     
 
-(define top-dir (assoc-ref all-vars "top-dir" )) ;; top level directory - results of the input by user
-(define lib-dir (string-append top-dir "lib/")) ;; home of books
-(define db-dir (string-append top-dir "db/")) ;; home of all jsons
-(define backup-dir (string-append top-dir "backup/")) ;; backup of all jsons
-(define deposit-dir (string-append top-dir "deposit/"))  ;; out of gutenberg ready to be processed
-(define dest-dir (string-append top-dir "dest/")) ;; final destination directory on urbit
-(define withdraw-dir (string-append top-dir "withdraw/")) ;;for books to read - link to ereader
+;;file
+;; (define target (assoc-ref all-vars "target" ))
+;; (define top-dir (assoc-ref all-vars "top-dir" )) ;; top level directory - results of the input by user
+;; (define lib-dir (string-append top-dir "lib/")) ;; home of books
+;; (define db-dir (string-append top-dir "db/")) ;; home of all jsons
+;; (define backup-dir (string-append top-dir "backup/")) ;; backup of all jsons
+;; (define deposit-dir (string-append top-dir "deposit/"))  ;; out of gutenberg ready to be processed
+;; (define dest-dir (string-append top-dir "dest/")) ;; final destination directory on urbit
+;; (define withdraw-dir (assoc-ref all-vars "withdraw/")) ;;for books to read - link to ereader
+
+;; ;;oracles3  minio-local
+;; (define base-uri (assoc-ref all-vars "base-uri"))
+;; (define namespace (assoc-ref all-vars "namespace"))
+;; (define bucket (assoc-ref all-vars "bucket"))
+;; (define withdraw (assoc-ref all-vars "withdraw"))
+;; (define paread (assoc-ref all-vars "paread"))
+;; (define pawrite (assoc-ref all-vars "pawrite"))
+
+
+(define target  "miniolocal")
+(define base-uri "http://127.0.0.1:9000")
+(define bucket "bookstore")
+(define withdraw "withdraw")
+(define top-dir "")
+

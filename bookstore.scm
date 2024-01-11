@@ -1,43 +1,32 @@
-#! /gnu/store/qlmpcy5zi84m6dikq3fnx5dz38qpczlc-guile-3.0.8/bin/guile \
--e main -s
-!#
-
- (add-to-load-path "/home/mbc/projects/bookstore")
-
- ;;(add-to-load-path "/home/admin/projects")
-
-(use-modules (web client)
-	     (srfi srfi-19)   ;; date time
-	     (srfi srfi-1)  ;;list searching; delete-duplicates in list 
-	     (srfi srfi-9)  ;;records
-	     (ice-9 rdelim)
-	     (ice-9 i18n)   ;; internationalization
-	     (ice-9 popen)
-	     (ice-9 regex) ;;list-matches
-	     (ice-9 receive)	     
-	     (ice-9 string-fun)  ;;string-replace-substring
-	     (ice-9 pretty-print)
-	     (json)
-	     (bookstore store)
-	     
-	     )
+(define-module (bookstore) 
+  #:use-module (web client)
+  #:use-module (web response)
+  #:use-module (web request)
+  #:use-module (web uri)
+  #:use-module (srfi srfi-19)   ;; date time
+  #:use-module (srfi srfi-1)  ;;list searching; delete-duplicates in list 
+  #:use-module (srfi srfi-9)  ;;records
+  #:use-module (ice-9 rdelim)
+  #:use-module (ice-9 i18n)   ;; internationalization
+  #:use-module (ice-9 popen)
+  #:use-module (ice-9 regex) ;;list-matches
+  #:use-module (ice-9 receive)	     
+  #:use-module (ice-9 string-fun)  ;;string-replace-substring
+  #:use-module (ice-9 pretty-print)
+  #:use-module (json)
+  #:use-module (rnrs bytevectors) 
+  #:use-module (bookstore store)
+;;;;for testing
+  #:use-module (bookstore tags)
+  #:use-module (bookstore env)
+  #:use-module (bookstore utilities)
+  
+	 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; guix environment --network --expose=/etc/ssl/certs/  --manifest=manifest.scm
-;; guile -e main -s ./conman.scm 7 10
-;; 7 days (&reldate)
-;; max 10 summaries (&retmax)
-
-;;guix environment --pure --network --expose=/etc/ssl/certs/  --manifest=manifest.scm -- ./conman.scm 7 2
-
-;; /gnu/store/0w76khfspfy8qmcpjya41chj3bgfcy0k-guile-3.0.4/bin/guile
-
-;; https://pubmed.ncbi.nlm.nih.gov/"
-;; scp ~/projects/conman/conman.scm mbc@192.168.1.11:/home/mbc/projects/conman/conman.scm
-
-
-;; When setting up crontab use full path to executables
-;; 45 6 * * * /gnu/store/m5iprcg6pb5ch86r9agmqwd8v6kp7999-guile-3.0.5/bin/guile -L /gnu/store/l01lprwdfn8bf1ql0sdpk40cai26la6n-conmanv4-0.1/share/guile/site/3.0 -e main -s /gnu/store/l01lprwdfn8bf1ql0sdpk40cai26la6n-conmanv4-0.1/share/guile/site/3.0/conmanv4.scm 1 30
+;;guix shell --network guile guile-json guile-readline guile-gnutls -- guile -L . ./bookstore.scm
+;;guix shell --container --network --expose=/home/mbc/.config/bookstore guile guile-json guile-readline guile-gnutls -- guile -L . ./bookstore.scm
+;;MINIO_ROOT_USER=admin MINIO_ROOT_PASSWORD=password minio server ~/data --console-address ":9001"
 
 
 (define article-count 0)
@@ -85,11 +74,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (main args)
+(define (main)
   ;; args: '( "script name" "past days to query" "Number of articles to pull")
   (let* ((start-time (current-time time-monotonic))
-	 (config-available? (access? (string-append (getenv "HOME") "/.config/bookstore/config.json") F_OK))
-	 (dummy (if config-available? (top)  (init-library ) ))			    
+;;	 (config-available? (access? (string-append (getenv "HOME") "/.config/bookstore/config.json") F_OK))
+	 ;;	 (dummy (if config-available? (top)  (init-library ) ))
+	 (_ (top))
 	 (stop-time (current-time time-monotonic))
 	 
 	 (elapsed-time (ceiling (/ (time-second (time-difference stop-time start-time)) 60)))
@@ -97,3 +87,4 @@
     (pretty-print (string-append "Shutting down after " (number->string elapsed-time) " minutes of use."))
     ))
    
+(main)

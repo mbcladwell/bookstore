@@ -14,8 +14,9 @@
 	     #:use-module (json)
 	     #:use-module (bookstore env)
 	     #:use-module (bookstore utilities)
-	     #:export (init-tags)
-	     #:export (add-tag)
+	     #:export (init-tags-json)
+	     #:export (add-tag-to-controlled-list)
+	     #:export (add-tag-to-book)
 	     #:export (assign-tag-to-book)
 	     #:export (get-all-tags-as-string)
 	     #:export (get-all-tags)
@@ -27,6 +28,27 @@
 
 
 (define (get-all-tags)
+  (cond 
+    ((equal? target "miniolocal")(get-json-from-bucket "tags"))
+    ((equal? target "file") (get-all-tags-file))
+    (else (pretty-print "target not found in bookstore tags get-all-tags"))
+    ))
+
+
+(define (get-all-tags-minio)
+  ;;returns a list of all tags
+  (let* ((tags-fn (string-append db-dir tags-file-name) )
+	  (url (string-append base-uri "/" bucket "/" tags-file-name))
+	 (the-body   (receive (response-status response-body)
+			 (http-request url
+				       #:method 'GET
+				       #:port (open-socket-for-uri url #:verify-certificate? #f))
+		       response-body))
+	 (response  (json-string->scm (utf8->string the-body)))
+	 (tag-vec (assoc-ref response "tags")))
+    (vector->list tag-vec)))
+
+(define (get-all-tags-file)
   ;;returns a list of all tags
   (let* ((tags-fn (string-append db-dir tags-file-name) )
 	 (p  (open-input-file tags-fn))
@@ -36,35 +58,29 @@
     (vector->list tag-vec)     
     ))
 
-(define (init-tags db-dir tags-file-name)
-  ;;initialize the main tag json
-  (let* ((tags-fn (string-append db-dir tags-file-name) )
-	 (p  (open-output-file tags-fn))
-	 (tags #("fiction" "nonfiction" "medicine" "history" "philosophy" "agriculture" "politics" "science" "biography" "autobiography"))
-	 (content (scm->json-string `(("tags" . ,tags))))
-	 )    
-    (begin
-      (put-string p content)
-      (force-output p))))
 
-(define (add-tag db-dir backup-dir new-tag tags-file-name)
+(define (init-tags-json)
+  ;;initialize the main tag json
+  (let* ( (tags #("fiction" "nonfiction" "medicine" "history" "philosophy" "agriculture" "politics" "science" "biography" "autobiography"))
+	 (content (scm->json-string `(("tags" . ,tags)))))
+    content))
+
+(define (add-tag-to-controlled-list new-tag)
   ;;adds tag to controlled list of tags
-  (let* ((all-tags (get-all-tags))
-	 (new-tags (cons new-tag all-tags ))
+  (let* (;;(old-tags (get-all-tags))
+	 (new-tags (cons new-tag (get-all-tags) ))
 	 (new-tags-sorted (list->vector (sort-list! new-tags string<)))
-	 (old-filename (string-append db-dir tags-file-name) )
-;	; (pref (date->string  (current-date) "~Y~m~d~I~M"))
-;	; (backed-up-filename (string-append backup-dir pref "-" tags-file-name))
-;	; (command (string-append "mv " old-filename " " backed-up-filename))
-       ;; (dummy (system command))
-	 (dummy (make-backup db-dir tags-file-name backup-dir)) 
-	 (content (scm->json-string `(("tags" . ,new-tags-sorted))))
-	 (command (string-append "rm " old-filename))
-	 (dummy (system command))
-	 (p  (open-output-file (string-append db-dir tags-file-name))))
+	 (new-content (scm->json-string `(("tags" . ,new-tags-sorted))))
+	 ;;now repackage old tags
+	 (old-tags (get-all-tags))
+	 (backupfn (make-backup-file-name tags-file-name)) 
+	 (old-tags-sorted (list->vector (sort-list! old-tags string<)))
+	 (old-content (scm->json-string `(("tags" . ,old-tags-sorted))))	 
+	 )
  (begin
-     (put-string p content)
-     (force-output p))))
+     (send-to-bucket backupfn old-content)
+     (send-to-bucket tags-file-name new-content))))
+    
 
 
 
@@ -118,6 +134,7 @@
   ;;in: string possible only first few chars
   ;;lst: list of tags
   ;;returns the full tag e.g. ph -> philosophy
+  ;;this is for the workflow where a user is looking for all books with the given tag
   (if (null? (cdr lst))
       (if (string=? in (substring (car lst) 0 (string-length in)))
 	  (car lst)	

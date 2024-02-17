@@ -1,0 +1,5 @@
+#!/bin/sh
+
+rm /home/mbc/temp/mylib/deposit/*.*
+
+cp /home/mbc/projects/bookstore/samples/txt/*.* cp /home/mbc/temp/mylib/deposit 

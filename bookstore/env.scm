@@ -23,15 +23,21 @@
 	     #:export (base-uri)
 	     #:export (withdraw)
 	     #:export (target)
+	     #:export (get-books-json)
+	     #:export (get-contags)
+	     #:export (get-consuffix)
+	     #:export (get-backup-prefix)
+	     #:export (mcalias)
 	    ;; #:export ()
 	     )
 
 (define doc-viewer "ebook-viewer") ;;from Calibre
-(define lib-file-name "books.json")
-(define tags-file-name "contags.json")
-(define suffixes-file-name "consuffix.json")
+;;(define lib-file-name "books.json")
+;;(define tags-file-name "contags.json")
+;;(define suffixes-file-name "consuffix.json")
 (define config-file-name (string-append (getenv "HOME") "/.config/bookstore/config.json"))
 (define config-available? (access? config-file-name F_OK))
+(define mcalias "myminio") ;; ~/.mc/config.json entry
 (define all-vars '())
 
 (if config-available? 
@@ -42,29 +48,77 @@
       (set! all-vars '(("top-dir" . ""))) ;;decoy
       (pretty-print (string-append "Expected configuration file " config-file-name " does not exist!"))))
     
+;;{"target":"miniolocal",
+;; "top-dir":"",
+;; "base-uri":"https://127.0.0.1:9000/",
+;; "namespace":"idd2jj2zatqq",
+;; "bucket":"bookstore",
+;; "paread":"6eWiHuS3TGffX_cG-Mnz7RcBtcvHeiIBHDt4TVwErO_TSSYX_Avw-9nLG1hCZVZ1",
+;; "pawrite":"f26Xz-Co-MMebq9K1EzuWwX2MVyX4XhMC0rcKtuaUkTTMxIyfFSb6DzgPEoL5nhp"}
 
-;;file
-;; (define target (assoc-ref all-vars "target" ))
-;; (define top-dir (assoc-ref all-vars "top-dir" )) ;; top level directory - results of the input by user
-;; (define lib-dir (string-append top-dir "lib/")) ;; home of books
-;; (define db-dir (string-append top-dir "db/")) ;; home of all jsons
-;; (define backup-dir (string-append top-dir "backup/")) ;; backup of all jsons
-;; (define deposit-dir (string-append top-dir "deposit/"))  ;; out of gutenberg ready to be processed
-;; (define dest-dir (string-append top-dir "dest/")) ;; final destination directory on urbit
-;; (define withdraw-dir (assoc-ref all-vars "withdraw/")) ;;for books to read - link to ereader
+
+
+(define target (assoc-ref all-vars "target" ))
+(define top-dir (assoc-ref all-vars "top-dir" )) ;; top level directory - results of the input by user
+;;(define lib-dir (string-append top-dir "lib/")) ;; home of books
+;;(define db-dir (string-append top-dir "db/")) ;; home of all jsons
+;;(define backup-dir (string-append top-dir "backup/")) ;; backup of all jsons
+;;(define deposit-dir (string-append top-dir "deposit/"))  ;; out of gutenberg ready to be processed
+;;(define dest-dir (string-append top-dir "dest/")) ;; final destination directory on urbit
+;;(define withdraw-dir (assoc-ref all-vars "withdraw/")) ;;for books to read - link to ereader
 
 ;; ;;oracles3  minio-local
-;; (define base-uri (assoc-ref all-vars "base-uri"))
-;; (define namespace (assoc-ref all-vars "namespace"))
-;; (define bucket (assoc-ref all-vars "bucket"))
+ (define base-uri (assoc-ref all-vars "base-uri"))
+ (define namespace (assoc-ref all-vars "namespace"))
+ (define bucket (assoc-ref all-vars "bucket"))
 ;; (define withdraw (assoc-ref all-vars "withdraw"))
-;; (define paread (assoc-ref all-vars "paread"))
-;; (define pawrite (assoc-ref all-vars "pawrite"))
+ (define paread (assoc-ref all-vars "paread"))
+ (define pawrite (assoc-ref all-vars "pawrite"))
 
+(define books-json "")
+(define contags "")
+(define consuffix "")
+(define deposit (string-append top-dir "/deposit")) ;;dir
+(define withdraw (string-append top-dir "/withdraw"))   ;;dir
+(define backup-prefix "") ;;prepended to file names for backup purposes
 
-(define target  "miniolocal")
-(define base-uri "http://127.0.0.1:9000")
-(define bucket "bookstore")
-(define withdraw "withdraw")
-(define top-dir "")
+;;define file names dependent on source
+;;note that cond won't work, must use if
+(cond
+ ((string= target "filelocal")
+  (begin
+    (set! books-json (string-append  top-dir "/books.json"))
+    (set! contags (string-append  top-dir "/contags.json"))
+    (set! consuffix (string-append  top-dir "/consuffix.json"))
+    (set! withdraw (string-append  top-dir "/withdraw"))
+    (set! deposit (string-append  top-dir "/deposit"))
+    (set! backup-prefix top-dir)
+    
+    ))
+ ((string= target "miniolocal")
+    (set! books-json (string-append  base-uri bucket "/books.json"))
+    (set! contags (string-append  base-uri bucket "/contags.json"))
+    (set! consuffix (string-append  base-uri bucket "/consuffix.json"))
+    (set! withdraw (string-append  top-dir "withdraw"))
+    (set! deposit (string-append  top-dir "deposit"))
+    (set! backup-prefix (string-append  base-uri bucket))
+   ;; (pretty-print (string-append "contags in cond in env.scm: " *contags*))
+    )
+ ((string= target "oracles3")
+  (begin
+    (string-append  bucket "/withdraw")
+    ))
+ )
+   
+(define (get-books-json) books-json) ;;file
+(define (get-contags) contags)    ;;file
+(define (get-consuffix) consuffix)  ;;file
+(define (get-backup-prefix) backup-prefix)
+
+;; to skip config file
+;; (define target  "miniolocal")
+;; (define base-uri "http://127.0.0.1:9000")
+;; (define bucket "bookstore")
+;; (define withdraw "withdraw")
+;; (define top-dir "")
 

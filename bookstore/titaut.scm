@@ -13,6 +13,7 @@
 	     #:use-module (ice-9 ftw) ;; file tree walk
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (bookstore suffix)
+	     #:use-module (bookstore utilities)
 	     #:export (get-title-authors-fname-ext)
 	     #:export (get-authors-as-string)
 	     #:export (get-authors-as-list)
@@ -74,7 +75,7 @@
 
 
 
-(define (get-title-authors-fname-ext str top-dir)
+(define (get-title-authors-fname-ext str)
   ;; return a list '(title '(authors) new-file-name old-file-name ext)
   ;; last "by" is the delimiter of title author
   ;; str is file name only, not full path
@@ -85,13 +86,14 @@
 	 (fname (substring str 0  dot ))
 	 (len-fname (length (string->list fname)))	 
 	 (ext (substring str (+ dot 1) len)) ;; includes .
-	 (all-suffixes (get-all-suffixes-as-list top-dir))
+	 (all-suffixes (get-json "suffixes"))
 	 (new-file-name (recurse-remove-suffix all-suffixes fname))
-	 (b (last (list-matches " by " new-file-name)))
+	 (b (last (list-matches " by " new-file-name))) ;;what if no author??
 	 (start (match:start  b))
 	 (end (match:end  b))
 	 (len-new-file-name (length (string->list new-file-name)));;it might have changed
 	 (title (substring new-file-name 0 start))
+	 (_ (pretty-print (string-append "look here: " title)))
 	 (authors (substring new-file-name end len-new-file-name))
 	  (auth-lst (get-authors-as-list authors)) ;;gets a list '("Fname1 Lname1" "Fname2 Lname2")
 	;;  (new-file-name (string-append title ext))

@@ -35,14 +35,21 @@
   ;;auths and tags are vectors
    `(("title" . ,title)("author" . ,auths)("fname" . ,fname)("id" . ,id)("ext" . ,ext)("tags" . ,tags)("isbn" . ,isbn)))
 
+;; (define (get-all-books);;as list
+;;   (let* ((books-file-name  (get-books-json))
+;; ;;	 (_ (pretty-print (string-append "target: " target)))
+;; ;;	 (_ (pretty-print (string-append "books-file-name: " books-json)))
+	 
+;; 	 (p  (open-input-file books-file-name))
+;; 	 (all-books (json->scm p))
+;; 	 (book-vec (assoc-ref all-books "books"))
+;; 	 ;;(tag-vec (assoc-ref all-tags "tags"))
+;; 	 )
+;;     (vector->list book-vec)))
+
 (define (get-all-books);;as list
-  (let* ((books-file-name  (string-append top-dir "db/books.json")) 
-	 (p  (open-input-file books-file-name))
-	 (all-books (json->scm p))
-	 (book-vec (assoc-ref all-books "books"))
-	 ;;(tag-vec (assoc-ref all-tags "tags"))
-	 )
-    (vector->list book-vec)))
+  (get-json "books"))
+
 
 (define (cons-books-to-lib new old)
   ;;new element is '(old-fname new-fname '(list of attributes))
@@ -171,7 +178,7 @@
 
 (define (get-book-with-isbn isbn top-dir)
   (let* ((all-books  (get-all-books)))
-    (recurse-get-books-with-isbn isbn all-books '())))
+    (recurse-get-book-with-isbn isbn all-books '())))
 
 
 

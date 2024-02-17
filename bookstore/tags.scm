@@ -22,41 +22,12 @@
 	     #:export (get-all-tags)
 	     #:export (display-tag-menu)
 	     #:export (recurse-desired-tag)
-	     #:export (query-for-tags)
-	     
+	     #:export (query-for-tags)	     
 	     )
 
 
 (define (get-all-tags)
-  (cond 
-    ((equal? target "miniolocal")(get-json-from-bucket "tags"))
-    ((equal? target "file") (get-all-tags-file))
-    (else (pretty-print "target not found in bookstore tags get-all-tags"))
-    ))
-
-
-(define (get-all-tags-minio)
-  ;;returns a list of all tags
-  (let* ((tags-fn (string-append db-dir tags-file-name) )
-	  (url (string-append base-uri "/" bucket "/" tags-file-name))
-	 (the-body   (receive (response-status response-body)
-			 (http-request url
-				       #:method 'GET
-				       #:port (open-socket-for-uri url #:verify-certificate? #f))
-		       response-body))
-	 (response  (json-string->scm (utf8->string the-body)))
-	 (tag-vec (assoc-ref response "tags")))
-    (vector->list tag-vec)))
-
-(define (get-all-tags-file)
-  ;;returns a list of all tags
-  (let* ((tags-fn (string-append db-dir tags-file-name) )
-	 (p  (open-input-file tags-fn))
-	 (all-tags (json->scm p))
-	 (tag-vec (assoc-ref all-tags "tags"))
-	 )
-    (vector->list tag-vec)     
-    ))
+  (get-json "tags"))
 
 
 (define (init-tags-json)
@@ -67,19 +38,23 @@
 
 (define (add-tag-to-controlled-list new-tag)
   ;;adds tag to controlled list of tags
-  (let* (;;(old-tags (get-all-tags))
+  ;;make backup here rather than in a dedicated backup function because
+  ;;need to pull entire json to rewrite with timestamp - can't cp on minio over network
+  ;;(only can cp using minio mc)
+  (let* (
 	 (new-tags (cons new-tag (get-all-tags) ))
 	 (new-tags-sorted (list->vector (sort-list! new-tags string<)))
 	 (new-content (scm->json-string `(("tags" . ,new-tags-sorted))))
 	 ;;now repackage old tags
 	 (old-tags (get-all-tags))
-	 (backupfn (make-backup-file-name tags-file-name)) 
+	 (backupfn (make-backup-file-name "tags"))
 	 (old-tags-sorted (list->vector (sort-list! old-tags string<)))
 	 (old-content (scm->json-string `(("tags" . ,old-tags-sorted))))	 
 	 )
  (begin
-     (send-to-bucket backupfn old-content)
-     (send-to-bucket tags-file-name new-content))))
+   (send-to backupfn old-content)
+   (pretty-print new-content)
+   (send-to "tags" new-content))))
     
 
 

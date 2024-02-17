@@ -68,16 +68,18 @@
 
 (define (add-suffix new-suffix)
   ;;adds suffix to controlled list of suffixes
-  (let* ((all-suffixes (get-all-suffixes-as-list db-dir))
+  (let* ((all-suffixes (get-json "suffixes"));;list of strings
+	 (old-suffixes-sorted (list->vector (sort-list! all-suffixes string<)));; must be here; if placed below - will be modified in place at the line above
 	 (new-suffixes (cons new-suffix all-suffixes ))
-	 (new-suffixes-sorted (list->vector (sort-list! new-suffixes string<)))
-	 (old-filename (string-append db-dir suffixes-file-name) )
-	 (dummy (make-backup db-dir suffixes-file-name backup-dir)) 
-	 (content (scm->json-string `(("suffixes" . ,new-suffixes-sorted))))
-	 (command (string-append "rm " old-filename))
-	 (dummy (system command))
-	 (p  (open-output-file (string-append db-dir suffixes-file-name))))
+	 (new-suffixes-sorted (list->vector (sort-list! new-suffixes string<)));;a vector
+	 (content (scm->json-string `(("suffixes" . ,new-suffixes-sorted)))) ;; a json string
+	 ;;backup
+	 (backupfn (make-backup-file-name "suffixes"))
+	 (old-content (scm->json-string `(("suffixes" . ,old-suffixes-sorted))))	
+	 (_ (pretty-print old-content))
+	 )
  (begin
-     (put-string p content)
-     (force-output p))))
+        (send-to backupfn old-content)
+	(send-to "suffixes" content))))
+
 

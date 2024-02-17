@@ -41,7 +41,7 @@
      (display "  | |_) | (_) | (_) |   < ____) | || (_) | | |  __/\n")
      (display "  |____/ \\___/ \\___/|_|\\_\\_____/ \\__\\___/|_|  \\___|\n")
      (display "  ~Urbit compatible  \n\n")
-     (display (string-append "Library: " top-dir "\n\n"))
+     (display (string-append "Library: " (get-books-json) "\n\n"))
      ))
 
 (define (display-main-menu)

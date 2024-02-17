@@ -9,18 +9,14 @@
 	     #:use-module (ice-9 string-fun)  ;;string-replace-substring
 	     #:use-module (ice-9 pretty-print)
 	     #:use-module (ice-9 textual-ports)
-	     #:use-module (ice-9 ftw) ;; file tree walk
-	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
-	     #:use-module (ice-9 binary-ports) ;;get-bytevector-all
-	     #:use-module (ice-9 iconv) ;;bytevector->string
+	     #:use-module (ice-9 ftw) ;; file tree walk; scandir
+	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline	  	    
 	     #:use-module (json)
 	     #:use-module (web response)
 	     #:use-module (web request)
 	     #:use-module (web uri)
 	     #:use-module (web client)
 	     #:use-module (gnutls)
-	     #:use-module (gcrypt hash)
-	     #:use-module (gcrypt base16)
 	     #:use-module (rnrs bytevectors) 
 	     #:use-module (bookstore env)
 	     #:use-module (bookstore init)
@@ -32,6 +28,8 @@
 	     #:use-module (bookstore menus)	     
 	     #:export (top)
 	     #:export (init-minio-local-library)
+	     #:export (process-deposit)
+
 	  ;   #:export (display results)
 	     )
 
@@ -49,7 +47,7 @@
 
 (define book-count 0)
 
-(define (process-file orig-fname top-dir)
+(define (process-file orig-fname)
   ;;processing a file involves
   ;; 1 get the md5 hash
   ;; 2 extract title and author(s) from name if txt,pdf, from meta data if epub (include ISBN)
@@ -57,7 +55,7 @@
   ;; the original and dest filename is needed to rename the file
   ;; the suffix removed file name will be used to rename the book when withdrawn
   (let* (
-	 (lst (get-title-authors-fname-ext orig-fname top-dir))  ;;authors is  a list '("Fname1 Lname1" "Fname2 Lname2")      
+	 (lst (get-title-authors-fname-ext orig-fname))  ;;authors is  a list '("Fname1 Lname1" "Fname2 Lname2")      
 	 (out (string-append "Original File: " orig-fname "\n"))
 	 (title (car lst))
 	 (auth-lst (cadr lst))
@@ -68,10 +66,8 @@
 	;; (md5-port  (open-input-file md5-file))
 	 ;; (md5 (car (string-split (read-line md5-port) #\space)))
 
-	 (fuc (string-append  top-dir "/deposit/" orig-fname)) ;;fuc: file under consideration
-	 (bv-contents (call-with-input-file fuc get-bytevector-all))
-	 (md5 (bytevector->base16-string (md5 bv-contents)))
-       
+	 (fuc (string-append  top-dir "/deposit/" orig-fname)) ;;fuc: file under consideration	 
+	 (md5 (get-file-md5 fuc))       
 	 (out (string-append out "Title: " title  "\n"))
 	 (out (string-append out "Author(s): " auth-str  "\n"))
 	 (out (string-append out "md5: " md5  "\n"))
@@ -86,39 +82,45 @@
 	 (a (set! book-count (+ book-count 1))))
     cmpd-lst))
 
-(define (process-all-files lst results top-dir)
+(define (process-all-files lst results)
   ;;lst: list of files
   ;;results: lst of books
   (if (null? (cdr lst))
       (begin
-	(set! results (cons (process-file (car lst) top-dir) results))
+	(set! results (cons (process-file (car lst)) results))
 	results)
       (begin
-	(set! results (cons (process-file (car lst) top-dir) results))
-	(process-all-files (cdr lst) results top-dir))))
+	(set! results (cons (process-file (car lst)) results))
+	(process-all-files (cdr lst) results))))
 
 
-(define (process-deposit top-dir)
+(define (process-deposit)
   ;;process all the files in the deposit directory
   ;;note that a compund list is being processed '(old-fname new-fname '(list of attributes))
+  ;;deposit directory is assumed to be local - even when S3 used
   (let* (
-	 (dummy (pretty-print  (string-append top-dir "deposit/" )))
-	 (all-files (cddr (scandir (string-append top-dir "deposit/" ))))
+	 (dummy (pretty-print  (string-append top-dir "/deposit" )))
+	 (all-files (cddr (scandir (string-append top-dir "/deposit" ))))
 	 (files-deposit? (if (= (length all-files) 0) #f #t ))
 	 (message (if files-deposit?
-			(let* ((dummy (make-backup db-dir lib-file-name backup-dir ))
-			       (new-books-lst (process-all-files all-files '() top-dir))
-			       (lib-lst (get-all-books top-dir)) ;; as '(old-fname new-fname '(list of attributes))
-			       (merged-lib-lst (list->vector (cons-books-to-lib  new-books-lst lib-lst)))
+		      (let* (;;make backup of books.json
+			    (all-books-old (backup-json "books"))
+			       (new-books-only-lst (process-all-files all-files '()))
+;;			       (all-books-old (get-all-books)) ;; as '(old-fname new-fname '(list of attributes))
+			       (merged-lib-lst (list->vector (cons-books-to-lib  new-books-only-lst all-books-old)))
 			       (content (scm->json-string `(("books" . ,merged-lib-lst))))
-			       (db-json (string-append db-dir lib-file-name ))
-			       (dummy (system (string-append "rm " db-json)))
-			       (out-port (open-output-file db-json))
-			       (dummy (put-string out-port content))
-			       (dummy (force-output out-port))
-			       (new-lst-only (cons-books-to-lib new-books-lst '()))
-			       (dummy (make-json-for-gs new-lst-only top-dir))
-			       (dummy (recurse-move-files new-books-lst top-dir))
+			       (_ (delete-json "books"))
+			       (_ (send-to-bucket "books" content))
+
+			       ;;for graph-store
+			       (new-lst-only (cons-books-to-lib new-books-only-lst '()))
+			       (content-new-only (scm->json-string `(("books" . ,new-lst-only))))
+			       (gs-name (string-append "NEW-" (date->string  (current-date) "~Y~m~d~H~M~S-") "books.json"))
+			       ;;need to save; what about contags? consuffix?
+;;			       (dummy (make-json-for-gs new-lst-only top-dir));;for graph-store
+;;			       (dummy (recurse-move-files new-books-only-lst top-dir))
+;;working on this
+			       ;; (_ (pretty-print (string-append "new-books-only-lst: " new-books-only-lst)))
 			       )			       
 			   "Deposit files processed")		       			     			
 			 "No files to process!")))
@@ -128,9 +130,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; queries
-
-
-
 
 
 
@@ -213,9 +212,10 @@
   (let* ((base-uri (readline "\nEnter base URL: "))
 	 (namespace (readline "\nEnter namespace: "))
 	 (bucket (readline "\nEnter bucket name: "))
+	 (mcalias (readline "\nEnter mc alias (in ~/.mc/config.json): "))
 	 (paread (readline "\nEnter pre-authorized read code: "))
 	 (pawrite (readline "\nEnter pre-authorized write code: "))
-	 (config-json (scm->json-string `(("target" . "oracles3")("top-dir" . "")("base-uri" . ,base-uri)("namespace" . ,namespace)("bucket" . ,bucket)("paread" . ,paread)("pawrite" . ,pawrite))))
+	 (config-json (scm->json-string `(("target" . "oracles3")("top-dir" . "")("base-uri" . ,base-uri)("namespace" . ,namespace)("bucket" . ,bucket)("paread" . ,paread)("pawrite" . ,pawrite)("mcalias" . ,mcalias))))
 	 
 	 (db-json (get-db-json))
 	 (tags-json (init-tags-json))
@@ -243,7 +243,7 @@
   (let* ((base-uri "http://127.0.0.1:9000")
 	 (bucket "bookstore")
 	 (withdraw "withdraw")
-	 (config-json (scm->json-string `(("target" . "miniolocal")("top-dir" . "")("base-uri" . ,base-uri)("namespace" . "")("bucket" . ,bucket)("withdraw" . ,withdraw)("paread" . "")("pawrite" . ""))))
+	 (config-json (scm->json-string `(("target" . "miniolocal")("top-dir" . "")("base-uri" . ,base-uri)("namespace" . "")("bucket" . ,bucket)("withdraw" . ,withdraw)("paread" . "")("pawrite" . "")("mcalias" . "myminio"))))
 	 (db-json (get-db-json))
 	 (tags-json (init-tags-json))
 	 (suffixes-json (get-suffixes-json))
@@ -263,7 +263,7 @@
  	(selection (readline "Selection: "))
 	)
    (cond ((string= selection "1") (display-query-submenu))
- 	 ((string= selection "2") (process-deposit top-dir))
+ 	 ((string= selection "2") (process-deposit))
 	 ((string= selection "3") (add-tag-menu-item))
 	 ((string= selection "4") (add-suffix-menu-item)))
    

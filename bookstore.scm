@@ -15,18 +15,21 @@
   #:use-module (ice-9 pretty-print)
   #:use-module (json)
   #:use-module (rnrs bytevectors) 
+  #:use-module (bookstore env)
   #:use-module (bookstore store)
 ;;;;for testing
   #:use-module (bookstore tags)
-  #:use-module (bookstore env)
   #:use-module (bookstore utilities)
-  
+ #:use-module (ice-9 ftw) ;; file tree walk; scandir
 	 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;guix shell --network guile guile-json guile-readline guile-gnutls -- guile -L . ./bookstore.scm
-;;guix shell --container --network --expose=/home/mbc/.config/bookstore guile guile-json guile-readline guile-gnutls -- guile -L . ./bookstore.scm
+;;guix shell --network --expose=/home/mbc/.config/bookstore --manifest=manifest.scm -- guile -L . ./bookstore.scm
+;;guix shell --network --manifest=manifest.scm -- guile -L . ./bookstore.scm
 ;;MINIO_ROOT_USER=admin MINIO_ROOT_PASSWORD=password minio server ~/data --console-address ":9001"
+
+;;mc alias set myminio http://127.0.0.1:9000 admin password
 
 
 (define article-count 0)
@@ -79,7 +82,9 @@
   (let* ((start-time (current-time time-monotonic))
 ;;	 (config-available? (access? (string-append (getenv "HOME") "/.config/bookstore/config.json") F_OK))
 	 ;;	 (dummy (if config-available? (top)  (init-library ) ))
-	 (_ (top))
+	;; (display (string-append "in main: " (get-json "books")))
+	 ;; (_ (top))
+	 (_ (process-deposit))
 	 (stop-time (current-time time-monotonic))
 	 
 	 (elapsed-time (ceiling (/ (time-second (time-difference stop-time start-time)) 60)))

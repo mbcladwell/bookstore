@@ -1,12 +1,8 @@
 to make a backup:
 
-(send-to resource data)
-(send-to "books" data)
+(send-json-to resource data)
+(send-json-to "books" data)
 
+get-json-from-bucket utilities 115,6
+sometime character sometimes string
 
-working on: process-deposit 101 store.scm
-backup strategy that is minio friendly
-
-utilities: move-file
-
-205 (define (backup-json resource) utilities collapse- does not need cond

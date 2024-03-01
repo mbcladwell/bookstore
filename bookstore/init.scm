@@ -15,7 +15,7 @@
 	     #:export (get-db-json)
 	     #:export (init-library)
 	     #:export (make-config-file)
-	     #:export (config-file-name)
+;;	     #:export (config-file-name)
 	     )
 
 

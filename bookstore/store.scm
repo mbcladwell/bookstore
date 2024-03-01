@@ -107,18 +107,18 @@
 			    (all-books-old (backup-json "books"))
 			       (new-books-only-lst (process-all-files all-files '()))
 ;;			       (all-books-old (get-all-books)) ;; as '(old-fname new-fname '(list of attributes))
-			       (merged-lib-lst (list->vector (cons-books-to-lib  new-books-only-lst all-books-old)))
-			       (content (scm->json-string `(("books" . ,merged-lib-lst))))
+			       (merged-lib-lst  (cons-books-to-lib  new-books-only-lst all-books-old))
+			      ;; (content  `(("books" . ,merged-lib-lst)));;must be list
 			       (_ (delete-json "books"))
-			       (_ (send-to-bucket "books" content))
+			       (_ (send-json-to "books" merged-lib-lst))
 
 			       ;;for graph-store
 			       (new-lst-only (cons-books-to-lib new-books-only-lst '()))
-			       (content-new-only (scm->json-string `(("books" . ,new-lst-only))))
+			      ;; (content-new-only (scm->json-string `(("books" . ,new-lst-only))))
 			       (gs-name (string-append "NEW-" (date->string  (current-date) "~Y~m~d~H~M~S-") "books.json"))
 			       ;;need to save; what about contags? consuffix?
 ;;			       (dummy (make-json-for-gs new-lst-only top-dir));;for graph-store
-;;			       (dummy (recurse-move-files new-books-only-lst top-dir))
+			       (dummy (recurse-move-files new-books-only-lst))
 ;;working on this
 			       ;; (_ (pretty-print (string-append "new-books-only-lst: " new-books-only-lst)))
 			       )			       
@@ -180,13 +180,12 @@
   ;;this method is called after a check has been performed to insure
   ;;the directory does not yet exist
   (let* ((top-dir (readline "\nEnter top level directory: "))
-	 (lib-dir (string-append top-dir "/lib/"))
-	 (db-dir (string-append top-dir "/db/"))
-	 (backup-dir (string-append top-dir "/backup/"))
+	 (db-dir (string-append top-dir "/bookstore/"))
+;;	 (backup-dir (string-append top-dir "/backup/"))
 	 (deposit-dir (string-append top-dir "/deposit/"))
 	 (withdraw-dir (string-append top-dir "/withdraw/"))
 	 (config-json (scm->json-string `(("target" . "file")("top-dir" . ,top-dir))))
-	 (_ (system (string-append "mkdir " top-dir " " lib-dir " " db-dir " " backup-dir " " deposit-dir " " withdraw-dir )))
+	 (_ (system (string-append "mkdir " top-dir " " db-dir " " backup-dir " " deposit-dir " " withdraw-dir )))
 	 (db-json (get-db-json))
 	 (p1  (open-output-file (string-append db-dir "books.json")))
 	 (_ (put-string p1 db-json))
@@ -237,22 +236,21 @@
 
 
 (define (init-minio-local-library)
-  ;;str is the top level directory top-dir e.g. /home/mbc/library
   ;;this method is called after a check has been performed to insure
   ;;the directory does not yet exist
   (let* ((base-uri "http://127.0.0.1:9000")
 	 (bucket "bookstore")
-	 (withdraw "withdraw")
-	 (config-json (scm->json-string `(("target" . "miniolocal")("top-dir" . "")("base-uri" . ,base-uri)("namespace" . "")("bucket" . ,bucket)("withdraw" . ,withdraw)("paread" . "")("pawrite" . "")("mcalias" . "myminio"))))
+	 (withdraw-dir "withdraw")
+	 (config-json (scm->json-string `(("target" . "miniolocal")("top-dir" . "")("base-uri" . ,base-uri)("namespace" . "")("bucket" . ,bucket)("withdraw" . ,withdraw-dir)("paread" . "")("pawrite" . "")("mcalias" . "myminio"))))
 	 (db-json (get-db-json))
 	 (tags-json (init-tags-json))
 	 (suffixes-json (get-suffixes-json))
 	 )    
     (begin
     ;;  (make-config-file config-json)
-      (send-to-bucket "books.json" db-json)      
-      (send-to-bucket "contags.json" tags-json)
-      (send-to-bucket "consuffix.json" suffixes-json)
+      (send-json-to-bucket "books.json" db-json)      
+      (send-json-to-bucket "contags.json" tags-json)
+      (send-json-to-bucket "consuffix.json" suffixes-json)
       (display (string-append "\nLibrary initialized in bucket " bucket "\n")))))
 
 

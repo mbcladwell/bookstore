@@ -25,7 +25,7 @@
 
 (define (get-all-suffixes-as-list top-dir)
   ;;returns a list of all tags
-  (let* ((suf-fn (string-append db-dir suffixes-file-name) )
+  (let* ((suf-fn (string-append (get-db-dir) suffixes-file-name) )
 	 (p  (open-input-file suf-fn))
 	 (all-suffs (json->scm p))
 	 (suf-vec (assoc-ref all-suffs "suffixes"))
@@ -69,17 +69,16 @@
 (define (add-suffix new-suffix)
   ;;adds suffix to controlled list of suffixes
   (let* ((all-suffixes (get-json "suffixes"));;list of strings
-	 (old-suffixes-sorted (list->vector (sort-list! all-suffixes string<)));; must be here; if placed below - will be modified in place at the line above
+	;; (old-suffixes-sorted  (sort-list! all-suffixes string<));; must be here; if placed below - will be modified in place at the line above
 	 (new-suffixes (cons new-suffix all-suffixes ))
-	 (new-suffixes-sorted (list->vector (sort-list! new-suffixes string<)));;a vector
-	 (content (scm->json-string `(("suffixes" . ,new-suffixes-sorted)))) ;; a json string
+	 (new-suffixes-sorted (sort-list! new-suffixes string<));;a vector
 	 ;;backup
 	 (backupfn (make-backup-file-name "suffixes"))
-	 (old-content (scm->json-string `(("suffixes" . ,old-suffixes-sorted))))	
-	 (_ (pretty-print old-content))
+	 (_ (pretty-print "New suffixes list:"))
+	 (_ (pretty-print new-suffixes-sorted))
 	 )
  (begin
-        (send-to backupfn old-content)
-	(send-to "suffixes" content))))
+        (send-json-to "suffixes" all-suffixes backupfn)
+	(send-json-to "suffixes" new-suffixes-sorted))))
 
 

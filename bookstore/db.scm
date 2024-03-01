@@ -26,7 +26,6 @@
 	     #:export (cons-books-to-lib)
 	     #:export (assign-tags-to-book)
 	     #:export (add-tags-to-book)
-	     #:export (write-new-db)
 	     #:export (substitute-new-for-old-book)	     
 	     )
 
@@ -36,7 +35,7 @@
    `(("title" . ,title)("author" . ,auths)("fname" . ,fname)("id" . ,id)("ext" . ,ext)("tags" . ,tags)("isbn" . ,isbn)))
 
 ;; (define (get-all-books);;as list
-;;   (let* ((books-file-name  (get-books-json))
+;;   (let* ((books-file-name  (get-books-json-fn))
 ;; ;;	 (_ (pretty-print (string-append "target: " target)))
 ;; ;;	 (_ (pretty-print (string-append "books-file-name: " books-json)))
 	 
@@ -219,24 +218,9 @@ new-book))
 
 
 
-
 (define (substitute-new-for-old-book new old)
   ;;updates the main library list with edited book
   (let* ((all-books (get-all-books))
 	 (mod-books (cons new (delete old all-books))) )
     mod-books))
-
-
-(define (write-new-db new-all-books)
-;;backs up then writes new books.json
-  (let* ((dummy (make-backup db-dir "books.json" backup-dir))
-	 (a (list->vector new-all-books))
-	 (content (scm->json-string `(("books" .  ,a))))
-	 (db-json (string-append db-dir lib-file-name ))
-	 (dummy (system (string-append "rm " db-json)))
-	 (out-port (open-output-file db-json))
-	 (dummy (put-string out-port content)))
-    (force-output out-port))
-  )
-
 

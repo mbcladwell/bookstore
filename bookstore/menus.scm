@@ -33,15 +33,15 @@
  (define (display-logo)
    ;;https://patorjk.com/software/taag/#p=display&f=Big&t=Book%20Munger
    (begin
-     (system "printf \"\\033c\"")
+;;     (system "printf \"\\033c\"")
      (display "   ____              _     _____ _                \n ")
      (display " |  _ \\            | |   / ____| |\n")                
      (display "  | |_) | ___   ___ | | _| (___ | |_ ___  _ __ ___\n") 
      (display "  |  _ < / _ \\ / _ \\| |/ /\\___ \\| __/ _ \\| '__/ _ \\\n")
      (display "  | |_) | (_) | (_) |   < ____) | || (_) | | |  __/\n")
      (display "  |____/ \\___/ \\___/|_|\\_\\_____/ \\__\\___/|_|  \\___|\n")
-     (display "  ~Urbit compatible  \n\n")
-     (display (string-append "Library: " (get-books-json) "\n\n"))
+     (display "  ~Urbit compatible, Appocolypse ready  \n\n")
+     (display (string-append "Library: " (get-books-json-fn) "\n\n"))
      ))
 
 (define (display-main-menu)
@@ -139,7 +139,9 @@
 			(orig (car (get-book-with-id id)))
 			(mod-all-books (substitute-new-for-old-book new-book orig))
 			)
-		  (write-new-db mod-all-books)))		 
+		   		   (begin
+		     (backup-json "books")
+		     (send-json-to "books" mod-all-books))))		 
  		 ((string= action "w") 
 		  (let* (
 	      		 (orig (car (get-book-with-id id)))
@@ -178,7 +180,9 @@
 			(orig (car (get-book-with-id id)))
 			(mod-all-books (substitute-new-for-old-book new-book orig))
 			)
-		  (write-new-db mod-all-books)))		 
+		   (begin
+		     (backup-json "books")
+		     (send-json-to "books" mod-all-books))))		 		 
  		 ((string= action "w") 
 		  (let* (
 	      		 (orig (car (get-book-with-id id)))
@@ -219,7 +223,9 @@
 			(orig (car (get-book-with-id id)))
 			(mod-all-books (substitute-new-for-old-book new-book orig))
 			)
-		  (write-new-db mod-all-books)))		 
+		   (begin
+		     (backup-json "books")
+		     (send-json-to "books" mod-all-books))))		 
  		 ((string= action "w") 
 		  (let* (
 	      		 (orig (car (get-book-with-id id)))

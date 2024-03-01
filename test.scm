@@ -57,68 +57,19 @@
       (car lst)
       (my-last (cdr lst))))
 
-(define (get-all-tags-minio)
-  ;;returns a list of all tags
-  (let* ((url my-write-url)
-	(url "http://127.0.0.1:9000/bookstore/contags.json")
-	 (the-body   (receive (response-status response-body)
-			(http-request url #:method 'GET #:port (open-socket-for-uri url)) response-body))
-	;; (p  (open-input-file tags-fn))
-;;	 (all-tags  (utf8->string the-body))
-	 (all-tags   the-body)
-	 (tag-vec (json-string->scm all-tags))
-	 (vec (assoc-ref tag-vec "tags"))
-	 )
-    (vector->list vec)   
-    ))
+
+(define libfile)
+
+(define (load-lib libfile)
 
 
-(define (update-tags-minio all-tags new-tag)
-  ;;returns a list of all tags
-  (let* ((url my-write-url)
-	;; (url "http://127.0.0.1:9000/bookstore/contags.json")
-	 (new-tags (cons new-tag all-tags))
-	 (new-tags-sorted (list->vector (sort-list! new-tags string<)))
-	 (new-json (scm->json-string (acons "tags"  new-tags-sorted '())))	 
-	 (the-body   (receive (response-status response-body)
-			(http-request url #:method 'PUT #:body new-json #:port (open-socket-for-uri url)) response-body))
-	 (response  (utf8->string the-body))
-;	 (tag-vec (json-string->scm all-tags))
-;	 (vec (assoc-ref tag-vec "tags"))
-	 )
-    response
-    ))
 
-(define my-json  (scm->json-string '(("target" . "oracles3")("top-dir" . "")("base-uri" . "skjdfk")("namespace" . "popo")("pawrite" . "mnjudydhhhdhd"))))
-
-(define (dbload)
-
-   (let* ((url my-write-url)
-	;; (url "http://127.0.0.1:9000/bookstore/contags.json")
-;;	 (new-json (scm->json-string (acons "tags"  new-tags-sorted '())))	 
-;;	 (the-body   (receive (response-status response-body)
-;;			(http-request url #:method 'PUT #:body #f #:port (open-socket-for-uri url)) response-body))
-	 (the-body   (receive (response-status response-body)
-			(http-request url #:method 'PUT #:body my-json  #:port (open-socket-for-uri url)) response-body))
-	 (response  (utf8->string the-body))
-;	 (tag-vec (json-string->scm all-tags))
-;	 (vec (assoc-ref tag-vec "tags"))
-	 )
-    response
-    ))
-
+  )
 
 
 (define (main)
-  ;; args: '( "script name" "past days to query" "Number of articles to pull")
   (let* ((start-time (current-time time-monotonic))	 
-	; (a   (process-file "A Silly book 3 by Dum Dee, Zee Zeeow, Kiki Dodo - manybooks.txt" top-dir))
-					; (b (wrangle-cmpd-lst-to-gs-compatible-lst (list a) '()))
 
-	;; (a    (get-all-tags-minio) )
-	;; (b (update-tags-minio a "my-new-tagg"))
-	 ;;	 (b (scm->json-string (utf8->string a)))
-	 (a (dbload))
 	 (stop-time (current-time time-monotonic))
 	 (elapsed-time (time-second (time-difference stop-time start-time)))
 	 
@@ -148,8 +99,6 @@
 ;; scp ~/projects/conman/conman.scm mbc@192.168.1.11:/home/mbc/projects/conman/conman.scm
 
 
-;; When setting up crontab use full path to executables
-;; 45 6 * * * /gnu/store/m5iprcg6pb5ch86r9agmqwd8v6kp7999-guile-3.0.5/bin/guile -L /gnu/store/l01lprwdfn8bf1ql0sdpk40cai26la6n-conmanv4-0.1/share/guile/site/3.0 -e main -s /gnu/store/l01lprwdfn8bf1ql0sdpk40cai26la6n-conmanv4-0.1/share/guile/site/3.0/conmanv4.scm 1 30
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

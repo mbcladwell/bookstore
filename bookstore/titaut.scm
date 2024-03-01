@@ -93,7 +93,7 @@
 	 (end (match:end  b))
 	 (len-new-file-name (length (string->list new-file-name)));;it might have changed
 	 (title (substring new-file-name 0 start))
-	 (_ (pretty-print (string-append "look here: " title)))
+;;	 (_ (pretty-print (string-append "look here: " title)))
 	 (authors (substring new-file-name end len-new-file-name))
 	  (auth-lst (get-authors-as-list authors)) ;;gets a list '("Fname1 Lname1" "Fname2 Lname2")
 	;;  (new-file-name (string-append title ext))

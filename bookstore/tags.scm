@@ -41,20 +41,17 @@
   ;;make backup here rather than in a dedicated backup function because
   ;;need to pull entire json to rewrite with timestamp - can't cp on minio over network
   ;;(only can cp using minio mc)
-  (let* (
+  (let* ((_       (pretty-print (string-append "entered add-tag: " new-tag)))
 	 (new-tags (cons new-tag (get-all-tags) ))
-	 (new-tags-sorted (list->vector (sort-list! new-tags string<)))
-	 (new-content (scm->json-string `(("tags" . ,new-tags-sorted))))
-	 ;;now repackage old tags
+	 (new-tags-sorted (sort-list! new-tags string<))
 	 (old-tags (get-all-tags))
 	 (backupfn (make-backup-file-name "tags"))
-	 (old-tags-sorted (list->vector (sort-list! old-tags string<)))
-	 (old-content (scm->json-string `(("tags" . ,old-tags-sorted))))	 
+	 (old-tags-sorted  (sort-list! old-tags string<))
 	 )
- (begin
-   (send-to backupfn old-content)
-   (pretty-print new-content)
-   (send-to "tags" new-content))))
+    (begin
+      (pretty-print (string-append "backupfn: " backupfn))
+      (send-json-to "tags" old-tags-sorted backupfn)
+      (send-json-to "tags" new-tags-sorted))))
     
 
 

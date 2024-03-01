@@ -23,9 +23,10 @@
 	     #:use-module (bookstore titaut)
 	     #:use-module (bookstore db)
 	     #:use-module (bookstore env)
+	     #:use-module (bookstore suffix)
 	     #:use-module (json)
-	     #:export (send-to)
-	     #:export (send-to-bucket)
+	     #:export (send-json-to)
+	     #:export (send-json-to-bucket)
 	     #:export (find-occurences-in-string)
 	     #:export (any-not-false?)
 	     #:export (recurse-move-files)
@@ -38,6 +39,10 @@
 	     #:export (backup-json)
 	     #:export (delete-json)
 	     #:export (get-file-md5)
+
+;;testing
+	     #:export (get-json-from-bucket)
+
 	     )
 
 (define (get-rand-file-name pre suff)
@@ -50,16 +55,18 @@
 (define (move-file-deposit->storage old new)
   ;;old name, new name
   (cond
-   ((string= target "file")
-    (let* ((old-fname (string-append top-dir "deposit/" old))
-	 (new-fname (string-append top-dir "lib/" new))
-	 (command (string-append "mv '" old-fname "' '" new-fname"'")))
+   ((string= target "filelocal")
+    (let* ((old-fname (string-append deposit "'" old "'"))
+	 (new-fname (string-append (get-db-dir)  new))
+	 (command (string-append "mv " old-fname " " new-fname)))
       (system command )))
-   ((string= target "miniolocal")(system (string-append "mc mv " deposit "/" old " " mcalias "/" bucket "/" new)))
+   ((string= target "miniolocal")
+    (begin
+   ;;   (pretty-print (string-append "mc mv " deposit "/'" old "' " mcalias "/" bucket "/" new))
+    (system (string-append "mc mv " deposit "/'" old "' " mcalias "/" bucket "/" new))))
    ((string= target "oracles3")
     #f
     )))
-
 
 
 ;; (define (move-file-old old new top-dir)
@@ -73,9 +80,9 @@
   ;;caar is the old file name
   ;;cadar is the new file name
   (if (null? (cdr lst))
-      (move-file (caar lst) (cadar lst))
+      (move-file-deposit->storage (caar lst) (cadar lst))
       (begin
-	(move-file (caar lst) (cadar lst))
+	(move-file-deposit->storage (caar lst) (cadar lst))
 	(recurse-move-files (cdr lst)))))
 
 (define (get-file-md5 file)
@@ -84,29 +91,11 @@
 (define (make-backup-file-name resource)
  ;; resource: books tags suffixes (this is also the key in a-list)
    (cond
-    ((string= resource "books") (string-append  (get-backup-prefix) "/" (date->string  (current-date) "~Y~m~d~H~M~S-") "books.json"))
-    ((string= resource "tags") (string-append  (get-backup-prefix) "/" (date->string  (current-date) "~Y~m~d~H~M~S-") "contags.json"))
-    ((string= resource "suffixes") (string-append  (get-backup-prefix) "/" (date->string  (current-date) "~Y~m~d~H~M~S-") "consuffix.json"))
+    ((string= resource "books") (string-append  (get-backup-prefix) (date->string  (current-date) "~Y~m~d~H~M~S-") "books.json"))
+    ((string= resource "tags") (string-append  (get-backup-prefix) (date->string  (current-date) "~Y~m~d~H~M~S-") "contags.json"))
+    ((string= resource "suffixes") (string-append  (get-backup-prefix) (date->string  (current-date) "~Y~m~d~H~M~S-") "consuffix.json"))
      ))
 
-
-;; (define (get-json-from-bucket str)
-;;   ;; str: books tags suffixes
-;;   (let* ((lst (cond
-;; 	       ((string= str "books") '("books.json" "books"))
-;; 		((string= str "tags") '("contags.json" "tags"))
-;; 		((string= str "suffixes") '("consuffix.json" "suffixes"))))
-;; 	 (file-name (car lst))
-;; 	 (query-term (cadr lst))
-;; 	 (url (string-append base-uri "/" bucket "/" file-name))
-;; 	 (the-body   (receive (response-status response-body)
-;; 			 (http-request url
-;; 				       #:method 'GET
-;; 				       #:port (open-socket-for-uri url #:verify-certificate? #f))
-;; 		       response-body))
-;; 	 (response  (json-string->scm (utf8->string the-body)))
-;; 	 (vec (assoc-ref response query-term)))
-;;     (vector->list vec) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; get a resource
@@ -115,34 +104,38 @@
 
 (define (get-json-from-bucket resource)
  ;; resource: books tags suffixes (this is also the key in a-list)
+  ;; returns the vector portion converted to list
   (let* ((uri (cond
-	       ((string= resource "books") (get-books-json))
-	       ((string= resource "tags") (get-contags))
-	       ((string= resource "suffixes") (get-consuffix)))
+	       ((string= resource "books") (get-books-json-fn))
+	       ((string= resource "tags") (get-contags-fn))
+	       ((string= resource "suffixes") (get-consuffix-fn)))
 	       )
 	 (the-body (receive (response-status response-body)
 		       (http-request uri
 				     #:method 'GET
-				     #:port (open-socket-for-uri uri #:verify-certificate? #f))
+				     #:port (open-socket-for-uri uri #:verify-certificate? #f)
+				     #:decode-body? #f)
 		     response-body))
 	 (response  (json-string->scm (utf8->string the-body)))
 ;;	 (response  (json-string->scm  the-body))
 	 (vec (assoc-ref response resource))
 	 )
-    (vector->list vec)))
+     (vector->list vec)))
 
 (define (get-json-from-file resource)
- ;; resource: books tags suffixes (this is also the key in a-list)
+  ;; resource: books tags suffixes (this is also the key in a-list)
+  ;; returns the vector portion converted to list
   (let* ((file (cond
-	       ((string= resource "books") (get-books-json))
-	       ((string= resource "tags") (get-contags))
-	       ((string= resource "suffixes") (get-suffixes-json)))
+	       ((string= resource "books") (get-books-json-fn))
+	       ((string= resource "tags") (get-contags-fn))
+	       ((string= resource "suffixes") (get-consuffix-fn)))
 	       )
+	 (pretty-print (string-append "tag file name: " file))
 	 (p  (open-input-file file))
 	 (data (json->scm p))
 	 (vec (assoc-ref data resource))
 	 )
-    (vector->list vec)))
+     (vector->list vec)))
 
 
 (define (get-json resource)
@@ -150,7 +143,7 @@
   ;; resource: the file or uri (as assembled by env.scm)
   ;; 'target' will determine whether to treat resource as file or uri
   (cond
-   ((string= target "file") (get-json-from-file resource))
+   ((string= target "filelocal") (get-json-from-file resource))
    ((string= target "miniolocal") (get-json-from-bucket resource))
    ((string= target "oracles3") '(get-json-from-bucket resource)))
   )
@@ -158,62 +151,67 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; save a resource
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;note that guile-json will not convert a list of jsons to text
+;; must list->vector and convert vector; label the vector e.g. ("books" . #(()()()))
 
-(define (send-to-bucket resource data)
+
+(define* (send-json-to-bucket resource data #:optional fn)
   ;; resource: books tags suffixes (this is also the key in a-list)
-  ;; data comes in as list (out as bytevector)
-  (let* ((uri (cond
-	       ((string= resource "books") (get-books-json))
-	       ((string= resource "tags") (get-contags))
-	       ((string= resource "suffixes") (get-consuffix))
-	       (else resource))
-	       )
+  ;; data comes in as list
+  (let* (
+	 (uri (if fn fn (cond
+			 ((string= resource "books") (get-books-json-fn))
+			 ((string= resource "tags") (get-contags-fn))
+			 ((string= resource "suffixes") (get-consuffix-fn))
+			 )))
+	 (stow (scm->json-string (acons resource (list->vector data) '())))
 	 (the-body  (receive (response-status response-body)
 			 (http-request uri
 				       #:method 'PUT
-				       #:body (string->utf8 (scm->json-string  data))
-;;				       #:body (list->string data)
+				       #:body  stow
 				       #:port (open-socket-for-uri uri #:verify-certificate? #f))
 		       response-body))
 	 (response  (utf8->string the-body)))
   response))
 
-(define (send-to-file resource data)
- ;; resource: books tags suffixes (this is also the key in a-list)
-  (let* ((file (cond
-	       ((string= resource "books") (get-books-json))
-	       ((string= resource "tags") (get-contags))
-	       ((string= resource "suffixes") (get-suffixes-json))
-	       (else resource))
-	       )
+(define* (send-json-to-file resource data #:optional fn)
+  ;; resource: books tags suffixes (this is also the key in a-list)
+  ;;data must be a list
+  (let* ((file (if fn fn (cond
+			  ((string= resource "books") (get-books-json-fn))
+			  ((string= resource "tags") (get-contags-fn))
+			  ((string= resource "suffixes") (get-suffixes-json))	       
+			  )))
+	 (stow (scm->json-string (acons resource (list->vector data) '())))
 	 (p  (open-output-file file))
-	 (data2 (scm->json-string data))
-	 (_ (put-string p data2))
-	 )
+	 (_ (put-string p stow)))
     (force-output p)))
 
 
-(define (send-to resource data)
- ;; resource: books tags suffixes (this is also the key in a-list)
+(define* (send-json-to resource data #:optional fn)
+  ;; resource: books tags suffixes (this is also the key in a-list)
+  ;; data must be list, though this is send-json...!!!
+  ;; fn is backup file name if this is a backup
   (cond
-   ((string= target "file") (send-to-file resource data))
-   ((string= target "miniolocal") (send-to-bucket resource data))
-   ((string= target "oracles3") '(send-to-bucket resource data)))
+   ((string= target "filelocal") (send-json-to-file resource data fn))
+   ((string= target "miniolocal") (send-json-to-bucket resource data fn))
+   ((string= target "oracles3") '(send-json-to-bucket resource data fn)))
   )
 
 
 (define (backup-json resource)
   ;; resource: books tags suffixes (this is also the key in a-list)
   ;;backup but also return resource as list for further processing
-    (let* ((content (get-json resource))
-	   (backup-fn (make-backup-file-name resource)))	   
-      (begin
-	(send-to backup-fn content)
-	content)))
+  (let* ((content (get-json resource)) ;; a list with vectors
+	 (backup-fn (make-backup-file-name resource))
+	 )	   
+    (begin
+      (send-json-to resource content backup-fn)
+      content)))
 
 (define (delete-json resource)
   (cond
-   ((string= target "file") (system (string-append "rm " (get-books-json))))
+   ((string= target "filelocal") (system (string-append "rm " (get-books-json-fn))))
    ((string= target "miniolocal")(system (string-append "mc rm " mcalias "/" bucket "/books.json" )))
    ((string= target "oracles3") #f)) 
   )
@@ -238,11 +236,15 @@
   ;;lib to withdraw
   (let* ((id (assoc-ref book "id"))
 	 (ext (assoc-ref book "ext"))
-	 (title (assoc-ref book "title"))
-	 (command (string-append "cp " lib-dir id "." ext " '" withdraw-dir title "." ext "'"))
-	 )
-   (system command)))
-
+	 (title (assoc-ref book "title")))
+    (cond
+     ((string= target "filelocal") (system (string-append "cp " (get-db-dir) id "." ext " '" withdraw-dir title "." ext "'")))
+     ((string= target "miniolocal")
+      (begin
+	(pretty-print (string-append "mc cp " mcalias "/" bucket "/" id "." ext " '" withdraw-dir title "." ext "'" ))
+	(system (string-append "mc cp " mcalias "/" bucket "/" id "." ext " '" withdraw-dir title "." ext "'" ))))
+     ((string= target "oracles3") #f)))) 
+	 
 
 ;;compund list of new books:
 ;;

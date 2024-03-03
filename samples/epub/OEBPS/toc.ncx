@@ -1,0 +1,358 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="en">
+  <head>
+    <meta name="dtb:uid" content="http://www.gutenberg.org/22382"/>
+    <meta name="dtb:depth" content="2"/>
+    <meta name="dtb:generator" content="Ebookmaker 0.12.39 by Project Gutenberg"/>
+    <meta name="dtb:totalPageCount" content="0"/>
+    <meta name="dtb:maxPageNumber" content="0"/>
+  </head>
+  <docTitle>
+    <text>The Iliad</text>
+  </docTitle>
+  <navMap>
+    <navPoint id="np-1" playOrder="1">
+      <navLabel>
+        <text>There are several editions of this ebook in the Project Gutenberg collection. Various characteristics of each ebook are listed to aid in selecting the preferred file. Click on any of the filenumbers below to quickly view each ebook.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-0.htm.html#pgepubid00000"/>
+    </navPoint>
+    <navPoint id="np-2" playOrder="2">
+      <navLabel>
+        <text>THE ILIAD OF HOMER,</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-0.htm.html#pgepubid00001"/>
+    </navPoint>
+    <navPoint id="np-3" playOrder="3">
+      <navLabel>
+        <text>Literally Translated, WITH EXPLANATORY NOTES.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-0.htm.html#pgepubid00002"/>
+    </navPoint>
+    <navPoint id="np-4" playOrder="4">
+      <navLabel>
+        <text>THEODORE ALOIS BUCKLEY, B.A.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-0.htm.html#pgepubid00003"/>
+    </navPoint>
+    <navPoint id="np-5" playOrder="5">
+      <navLabel>
+        <text>PREFACE.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-0.htm.html#pgepubid00004"/>
+    </navPoint>
+    <navPoint id="np-6" playOrder="6">
+      <navLabel>
+        <text>THE ILIAD OF HOMER.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-1.htm.html#pgepubid00005"/>
+    </navPoint>
+    <navPoint id="np-7" playOrder="7">
+      <navLabel>
+        <text>BOOK THE FIRST.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-1.htm.html#pgepubid00006"/>
+      <navPoint id="np-8" playOrder="8">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-1.htm.html#pgepubid00007"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-9" playOrder="9">
+      <navLabel>
+        <text>BOOK THE SECOND.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-2.htm.html#pgepubid00008"/>
+      <navPoint id="np-10" playOrder="10">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-2.htm.html#pgepubid00009"/>
+      </navPoint>
+      <navPoint id="np-11" playOrder="11">
+        <navLabel>
+          <text>THE CATALOGUE OF THE SHIPS.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-2.htm.html#pgepubid00010"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-12" playOrder="12">
+      <navLabel>
+        <text>BOOK THE THIRD</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-3.htm.html#pgepubid00011"/>
+      <navPoint id="np-13" playOrder="13">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-3.htm.html#pgepubid00012"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-14" playOrder="14">
+      <navLabel>
+        <text>BOOK THE FOURTH</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-4.htm.html#pgepubid00013"/>
+      <navPoint id="np-15" playOrder="15">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-4.htm.html#pgepubid00014"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-16" playOrder="16">
+      <navLabel>
+        <text>BOOK THE FIFTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-5.htm.html#pgepubid00015"/>
+      <navPoint id="np-17" playOrder="17">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-5.htm.html#pgepubid00016"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-18" playOrder="18">
+      <navLabel>
+        <text>BOOK THE SIXTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-6.htm.html#pgepubid00017"/>
+      <navPoint id="np-19" playOrder="19">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-6.htm.html#pgepubid00018"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-20" playOrder="20">
+      <navLabel>
+        <text>BOOK THE SEVENTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-7.htm.html#pgepubid00019"/>
+      <navPoint id="np-21" playOrder="21">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-7.htm.html#pgepubid00020"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-22" playOrder="22">
+      <navLabel>
+        <text>BOOK THE EIGHTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-8.htm.html#pgepubid00021"/>
+      <navPoint id="np-23" playOrder="23">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-8.htm.html#pgepubid00022"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-24" playOrder="24">
+      <navLabel>
+        <text>BOOK THE NINTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-9.htm.html#pgepubid00023"/>
+      <navPoint id="np-25" playOrder="25">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-9.htm.html#pgepubid00024"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-26" playOrder="26">
+      <navLabel>
+        <text>BOOK THE TENTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-10.htm.html#pgepubid00025"/>
+      <navPoint id="np-27" playOrder="27">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-10.htm.html#pgepubid00026"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-28" playOrder="28">
+      <navLabel>
+        <text>BOOK THE ELEVENTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-11.htm.html#pgepubid00027"/>
+      <navPoint id="np-29" playOrder="29">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-11.htm.html#pgepubid00028"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-30" playOrder="30">
+      <navLabel>
+        <text>BOOK THE TWELFTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-12.htm.html#pgepubid00029"/>
+      <navPoint id="np-31" playOrder="31">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-12.htm.html#pgepubid00030"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-32" playOrder="32">
+      <navLabel>
+        <text>BOOK THE THIRTEENTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-13.htm.html#pgepubid00031"/>
+      <navPoint id="np-33" playOrder="33">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-13.htm.html#pgepubid00032"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-34" playOrder="34">
+      <navLabel>
+        <text>BOOK THE FOURTEENTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-14.htm.html#pgepubid00033"/>
+      <navPoint id="np-35" playOrder="35">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-14.htm.html#pgepubid00034"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-36" playOrder="36">
+      <navLabel>
+        <text>BOOK THE FIFTEENTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-15.htm.html#pgepubid00035"/>
+      <navPoint id="np-37" playOrder="37">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-15.htm.html#pgepubid00036"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-38" playOrder="38">
+      <navLabel>
+        <text>BOOK THE SIXTEENTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-16.htm.html#pgepubid00037"/>
+      <navPoint id="np-39" playOrder="39">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-16.htm.html#pgepubid00038"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-40" playOrder="40">
+      <navLabel>
+        <text>BOOK THE SEVENTEENTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-17.htm.html#pgepubid00039"/>
+      <navPoint id="np-41" playOrder="41">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-17.htm.html#pgepubid00040"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-42" playOrder="42">
+      <navLabel>
+        <text>BOOK THE EIGHTEENTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-18.htm.html#pgepubid00041"/>
+      <navPoint id="np-43" playOrder="43">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-18.htm.html#pgepubid00042"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-44" playOrder="44">
+      <navLabel>
+        <text>BOOK THE NINETEENTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-19.htm.html#pgepubid00043"/>
+      <navPoint id="np-45" playOrder="45">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-19.htm.html#pgepubid00044"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-46" playOrder="46">
+      <navLabel>
+        <text>BOOK THE TWENTIETH</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-20.htm.html#pgepubid00045"/>
+      <navPoint id="np-47" playOrder="47">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-20.htm.html#pgepubid00046"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-48" playOrder="48">
+      <navLabel>
+        <text>BOOK THE TWENTY-FIRST.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-21.htm.html#pgepubid00047"/>
+      <navPoint id="np-49" playOrder="49">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-21.htm.html#pgepubid00048"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-50" playOrder="50">
+      <navLabel>
+        <text>BOOK THE TWENTY-SECOND.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-22.htm.html#pgepubid00049"/>
+      <navPoint id="np-51" playOrder="51">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-22.htm.html#pgepubid00050"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-52" playOrder="52">
+      <navLabel>
+        <text>BOOK THE TWENTY-THIRD.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-23.htm.html#pgepubid00051"/>
+      <navPoint id="np-53" playOrder="53">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-23.htm.html#pgepubid00052"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-54" playOrder="54">
+      <navLabel>
+        <text>BOOK THE TWENTY-FOURTH.</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-24.htm.html#pgepubid00053"/>
+      <navPoint id="np-55" playOrder="55">
+        <navLabel>
+          <text>ARGUMENT.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-24.htm.html#pgepubid00054"/>
+      </navPoint>
+      <navPoint id="np-56" playOrder="56">
+        <navLabel>
+          <text>END OF THE ILIAD.</text>
+        </navLabel>
+        <content src="8993743519344158754_22382-h-24.htm.html#pgepubid00055"/>
+      </navPoint>
+    </navPoint>
+    <navPoint id="np-57" playOrder="57">
+      <navLabel>
+        <text>THE FULL PROJECT GUTENBERG LICENSE</text>
+      </navLabel>
+      <content src="8993743519344158754_22382-h-25.htm.html#pg-footer-heading"/>
+    </navPoint>
+  </navMap>
+</ncx>

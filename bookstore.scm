@@ -20,6 +20,7 @@
 ;;;;for testing
   #:use-module (bookstore tags)
   #:use-module (bookstore utilities)
+  #:use-module (bookstore epubs)
  #:use-module (ice-9 ftw) ;; file tree walk; scandir
 	 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -80,10 +81,12 @@
 (define (main)
   ;; args: '( "script name" "past days to query" "Number of articles to pull")
   (let* ((start-time (current-time time-monotonic))
-	 (config-available? (access? (string-append (getenv "HOME") "/.config/bookstore/config.json") F_OK))
-	 (_ (if config-available? (top)  (init-library ) ))
+;;	 (config-available? (access? (string-append (getenv "HOME") "/.config/bookstore/config.json") F_OK))
+;;	 (_ (if config-available? (top)  (init-library ) ))
 	;; (display (string-append "in main: " (get-json "books")))
-	  (_ (top))
+	 ;; (_ (top))
+	 (tmpname (extract-opf-to-tmp "/home/mbc/projects/bookstore/samples/epub/The Illiad by Homer.epub"))
+	 (_ (pretty-print (get-tit-aut-f-opf tmpname)))
 	 (stop-time (current-time time-monotonic))
 	 
 	 (elapsed-time (ceiling (/ (time-second (time-difference stop-time start-time)) 60)))

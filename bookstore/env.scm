@@ -26,6 +26,7 @@
 	     #:export (get-contags-fn)
 	     #:export (get-consuffix-fn)
 	     #:export (get-backup-prefix)
+	     #:export (get-tmp-dir)
 	     #:export (mcalias)
 	    ;; #:export ()
 	     )
@@ -60,6 +61,7 @@
 (define target (assoc-ref all-vars "target" ))
 (define top-dir (assoc-ref all-vars "top-dir" )) ;; top level directory - results of the input by user
 (define db-dir  "") ;; home of all jsons
+(define tmp-dir  "") ;; home of all jsons
 ;;(define backup-dir (string-append top-dir "backup/")) ;; backup of all jsons
 ;;(define deposit-dir (string-append top-dir "deposit/"))  ;; out of gutenberg ready to be processed
 ;;(define dest-dir (string-append top-dir "dest/")) ;; final destination directory on urbit
@@ -91,6 +93,7 @@
     (set! withdraw-dir (string-append  top-dir "/withdraw/"))
     (set! deposit (string-append  top-dir "/deposit/"))
     (set! db-dir (string-append  top-dir "/db/"))
+    (set! tmp-dir (string-append  top-dir "/tmp/"))
     (set! backup-prefix (string-append top-dir "/db/"))
     
     ))
@@ -100,6 +103,7 @@
     (set! consuffix (string-append  base-uri "/" bucket "/consuffix.json"))
     (set! withdraw-dir (string-append  top-dir "/withdraw/"))
     (set! deposit (string-append  top-dir "/deposit/"))
+    (set! tmp-dir (string-append  top-dir "/tmp/"))
     (set! backup-prefix (string-append  base-uri "/" bucket "/"))
    ;; (pretty-print (string-append "contags in cond in env.scm: " *contags*))
     )
@@ -114,6 +118,7 @@
 (define (get-consuffix-fn) consuffix)  ;;file
 (define (get-backup-prefix) backup-prefix)
 (define (get-db-dir) db-dir)
+(define (get-tmp-dir) tmp-dir)
 ;; to skip config file
 ;; (define target  "miniolocal")
 ;; (define base-uri "http://127.0.0.1:9000")

@@ -17,7 +17,7 @@
 	     
  	     #:use-module (srfi srfi-19)   ;; date time
 	     #:use-module (srfi srfi-1)  ;;list searching; delete-duplicates in list 
-	     #:use-module (ice-9 rdelim)
+;;	     #:use-module (ice-9 rdelim)
 	     #:use-module (ice-9 i18n)   ;; internationalization
 	     #:use-module (ice-9 popen)
 	     #:use-module (ice-9 regex) ;;list-matches
@@ -38,7 +38,7 @@
 	    #:use-module (xmlrpc industria base64) 
 	    
 	     #:use-module (ice-9 ftw) ;; file tree walk
-	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
+;;	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     ;; #:use-module (bookstore env)
 	     ;; #:use-module (bookstore utilities)
 	     ;; #:use-module (bookstore init)
@@ -48,7 +48,7 @@
 	     ;; #:use-module (bookstore suffix)
 	     ;; #:use-module (bookstore db)
 	     ;; #:use-module (bookstore menus)
-	     ;; #:use-module (bookstore junk)
+	      #:use-module (bookstore epubs)
 	     )
 
 ;;guix shell --container --network --expose=/etc/ssl/certs=/etc/ssl/certs guile guile-json guile-readline guile-gnutls -- guile -L . ./test-epub.scm
@@ -112,29 +112,35 @@
 
 ;;(system  "/usr/bin/fetch-ebook-metadata -o -i 9781529035674 > /home/mbc/projects/bookstore/test/gogo2.txt" )
 
-(use-modules (sxml simple))
+;(use-modules (sxml simple))
+;(use-modules  (sxml ssax input-parse))
+(define myfile (open-input-file  "/home/mbc/projects/bookstore/test/content.opf.txt" ) )
 
-(define myfile   "/home/mbc/projects/bookstore/test/gogo2.txt" )
+;;(define a (call-with-input-file myfile get-string-all))
+;;(define b (xml->sxml a))
 
-(define a (call-with-input-file myfile get-string-all))
-(define b (xml->sxml a))
-(current-ssax-error-port STDERR)
-
-
-;; (let* ((myfile  "/home/mbc/projects/bookstore/test/gogo2.txt")
-;;        ( contents (call-with-input-file myfile get-string-all))
-;;       ; (a (match:end (string-match "<dc:creator[a-zA-Z0-9=-:;\" ]+>" contents)))
-;;        (b (match:end (string-match "</dc:creator>" contents)))
-;;     ;   (c (match:end (string-match "<dc:creator[a-zA-Z0-9:=\" -]+>" contents)))
-       
+(pretty-print (get-tit-aut-f-opf myfile))
+;; (let* ((f "/home/mbc/projects/bookstore/test/content.opf.txt")
+;;        (p (open-input-file f ))
+;;        (astart (find-string-from-port? "<dc:creator" p ))
+;;        (_ (skip-until '(#\>) p))
+;;        (alength (find-string-from-port? "</dc:creator>" p ))
+;;        (tstart (find-string-from-port? "<dc:title>" p ))
+;;        (tlength (find-string-from-port? "</dc:title>" p ))
+;;        (_ (close-port p))
+;;        (p2 (open-input-file f))
+;;        (a2start (find-string-from-port? "<dc:creator" p2 ))
+;;        (_ (skip-until '(#\>) p2))
+;;        (author (read-string (- alength 13) p2))
+;;        (t2start (find-string-from-port? "<dc:title>" p2 ))
+;;        (title (read-string (- tlength 11) p2))
+;;        (_ (close-port p2))
 ;;        )
-;;   (pretty-print (string-append  "\n" b "\n"  "\n" )))
-
-;; (match:end (string-match "<dc:creator[a-zA-Z0-9=-:;\" ]+>" contents))
-
-;; (match:end (string-match "</dc:creator>" contents))
-
-
-;; (match:end (string-match "<dc:creator[a-zA-Z0-9:=\" -]+>" contents))
-
-;; (match:end (string-match "<dc:creator[a-zA-Z0-9:=\" -]+>" "<dc:creator opf:file-as=\"Unknown\" opf:role=\"aut\">Edward Snowden</dc:creator>"))
+;;   (begin
+;;     (pretty-print (string-append "astart: " (number->string astart)))
+;;     (pretty-print (string-append "alength: " (number->string alength)))
+;;     (pretty-print (string-append "tstart: " (number->string tstart )))
+;;     (pretty-print (string-append  "tlength: " (number->string tlength)))
+;;     (pretty-print title)
+;;     (pretty-print author)
+;;     ))

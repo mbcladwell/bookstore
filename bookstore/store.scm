@@ -26,6 +26,7 @@
 	     #:use-module (bookstore tags)	     
 	     #:use-module (bookstore titaut)	     
 	     #:use-module (bookstore menus)	     
+	     #:use-module (bookstore epubs)	     
 	     #:export (top)
 	     #:export (init-minio-local-library)
 	     #:export (process-deposit)
@@ -48,39 +49,74 @@
 (define book-count 0)
 
 (define (process-file orig-fname)
+  ;;orig-fname: file name only not full path
   ;;processing a file involves
   ;; 1 get the md5 hash
-  ;; 2 extract title and author(s) from name if txt,pdf, from meta data if epub (include ISBN)
+  ;; 2 extract title and author(s) from name if txt,pdf, from meta data if epub
   ;; 3 return lst:'(orginal-filename dest-fname '(title author(s), orig-fname-no-suffix, hash, ext, tags, ISBN))
   ;; the original and dest filename is needed to rename the file
   ;; the suffix removed file name will be used to rename the book when withdrawn
-  (let* (
-	 (lst (get-title-authors-fname-ext orig-fname))  ;;authors is  a list '("Fname1 Lname1" "Fname2 Lname2")      
+  (let* (	 
+	 (fuc (string-append  top-dir "/deposit/" orig-fname)) ;;fuc: file under consideration	 
+	 (md5 (get-file-md5 fuc))       
 	 (out (string-append "Original File: " orig-fname "\n"))
+	 (out (string-append out "md5: " md5  "\n"))
+	 (ext (get-file-extension orig-fname))
+	 (dest-fname (string-append md5 "." ext ))
+	 (out (string-append out "New Filename: " dest-fname  "\n\n"))
+	 (lst (cond ((string= ext "txt") (get-title-authors-fname-ext orig-fname))
+ 		    ((string= ext "pdf") (get-title-authors-f-pdf orig-fname))
+		    ((string= ext "epub")(get-title-authors-f-epub orig-fname))))		    
+;;	 (_ (pretty-print lst))
 	 (title (car lst))
 	 (auth-lst (cadr lst))
 	 (auth-str (get-authors-as-string auth-lst "") )
-	;; (md5-file (get-rand-file-name "/var/tmp/md5" "txt"))
-	;; (command (string-append "md5sum \"" top-dir "deposit/" orig-fname "\" > " md5-file))
-	;; (dummy (system command))
-	;; (md5-port  (open-input-file md5-file))
-	 ;; (md5 (car (string-split (read-line md5-port) #\space)))
-
-	 (fuc (string-append  top-dir "/deposit/" orig-fname)) ;;fuc: file under consideration	 
-	 (md5 (get-file-md5 fuc))       
 	 (out (string-append out "Title: " title  "\n"))
-	 (out (string-append out "Author(s): " auth-str  "\n"))
-	 (out (string-append out "md5: " md5  "\n"))
-	 (ext (get-file-extension orig-fname))
+	 (out (string-append out "Author(s): " auth-str  "\n=========================\n"))
 	 (orig-fname-no-ext (cadddr lst))
 	 (orig-fname-no-suffix (caddr lst))
-	 (dest-fname (string-append md5 "." ext ))
-	 (out (string-append out "New Filename: " dest-fname  "\n\n"))
 	 (dummy (display out))
 	 (list-element (make-book-list-element title (list->vector auth-lst) orig-fname-no-suffix md5 ext #() ""))
 	 (cmpd-lst (list orig-fname dest-fname list-element))
 	 (a (set! book-count (+ book-count 1))))
     cmpd-lst))
+
+;; (define (process-file orig-fname)
+;;   ;;processing a file involves
+;;   ;; 1 get the md5 hash
+;;   ;; 2 extract title and author(s) from name if txt,pdf, from meta data if epub
+;;   ;; 3 return lst:'(orginal-filename dest-fname '(title author(s), orig-fname-no-suffix, hash, ext, tags, ISBN))
+;;   ;; the original and dest filename is needed to rename the file
+;;   ;; the suffix removed file name will be used to rename the book when withdrawn
+;;   (let* (
+	 
+;; 	 (lst (get-title-authors-fname-ext orig-fname))  ;;authors is  a list '("Fname1 Lname1" "Fname2 Lname2")      
+;; 	 (out (string-append "Original File: " orig-fname "\n"))
+;; 	 (title (car lst))
+;; 	 (auth-lst (cadr lst))
+;; 	 (auth-str (get-authors-as-string auth-lst "") )
+;; 	;; (md5-file (get-rand-file-name "/var/tmp/md5" "txt"))
+;; 	;; (command (string-append "md5sum \"" top-dir "deposit/" orig-fname "\" > " md5-file))
+;; 	;; (dummy (system command))
+;; 	;; (md5-port  (open-input-file md5-file))
+;; 	 ;; (md5 (car (string-split (read-line md5-port) #\space)))
+
+;; 	 (fuc (string-append  top-dir "/deposit/" orig-fname)) ;;fuc: file under consideration	 
+;; 	 (md5 (get-file-md5 fuc))       
+;; 	 (out (string-append out "Title: " title  "\n"))
+;; 	 (out (string-append out "Author(s): " auth-str  "\n"))
+;; 	 (out (string-append out "md5: " md5  "\n"))
+;; 	 (ext (get-file-extension orig-fname))
+;; 	 (orig-fname-no-ext (cadddr lst))
+;; 	 (orig-fname-no-suffix (caddr lst))
+;; 	 (dest-fname (string-append md5 "." ext ))
+;; 	 (out (string-append out "New Filename: " dest-fname  "\n\n"))
+;; 	 (dummy (display out))
+;; 	 (list-element (make-book-list-element title (list->vector auth-lst) orig-fname-no-suffix md5 ext #() ""))
+;; 	 (cmpd-lst (list orig-fname dest-fname list-element))
+;; 	 (a (set! book-count (+ book-count 1))))
+;;     cmpd-lst))
+
 
 (define (process-all-files lst results)
   ;;lst: list of files
@@ -105,20 +141,20 @@
 	 (message (if files-deposit?
 		      (let* (;;make backup of books.json
 			    (all-books-old (backup-json "books"))
-			       (new-books-only-lst (process-all-files all-files '()))
-;;			       (all-books-old (get-all-books)) ;; as '(old-fname new-fname '(list of attributes))
-			       (merged-lib-lst  (cons-books-to-lib  new-books-only-lst all-books-old))
-			      ;; (content  `(("books" . ,merged-lib-lst)));;must be list
-			       (_ (delete-json "books"))
-			       (_ (send-json-to "books" merged-lib-lst))
+			    (new-books-only-lst (process-all-files all-files '()))
+			    ;;			       (all-books-old (get-all-books)) ;; as '(old-fname new-fname '(list of attributes))
+			    (merged-lib-lst  (cons-books-to-lib  new-books-only-lst all-books-old))
+			    ;; (content  `(("books" . ,merged-lib-lst)));;must be list
+			    (_ (delete-json "books"))
+			    (_ (send-json-to "books" merged-lib-lst))
 
 			       ;;for graph-store
-			       (new-lst-only (cons-books-to-lib new-books-only-lst '()))
+			    (new-lst-only (cons-books-to-lib new-books-only-lst '()))
 			      ;; (content-new-only (scm->json-string `(("books" . ,new-lst-only))))
-			       (gs-name (string-append "NEW-" (date->string  (current-date) "~Y~m~d~H~M~S-") "books.json"))
+			    (gs-name (string-append "NEW-" (date->string  (current-date) "~Y~m~d~H~M~S-") "books.json"))
 			       ;;need to save; what about contags? consuffix?
 ;;			       (dummy (make-json-for-gs new-lst-only top-dir));;for graph-store
-			       (dummy (recurse-move-files new-books-only-lst))
+			    (dummy (recurse-move-files new-books-only-lst))
 ;;working on this
 			       ;; (_ (pretty-print (string-append "new-books-only-lst: " new-books-only-lst)))
 			       )			       

@@ -36,6 +36,8 @@
 	     #:use-module (xmlrpc simple) 
 	     #:use-module (xmlrpc syntax)
 	    #:use-module (xmlrpc industria base64) 
+	     #:use-module (sxml simple)
+	     #:use-module (sxml ssax input-parse)
 	    
 	     #:use-module (ice-9 ftw) ;; file tree walk
 ;;	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
@@ -114,12 +116,12 @@
 
 ;(use-modules (sxml simple))
 ;(use-modules  (sxml ssax input-parse))
-(define myfile (open-input-file  "/home/mbc/projects/bookstore/test/content.opf.txt" ) )
+;;(define myfile (open-input-file  "/home/mbc/projects/bookstore/test/content.opf.txt" ) )
 
 ;;(define a (call-with-input-file myfile get-string-all))
 ;;(define b (xml->sxml a))
 
-(pretty-print (get-tit-aut-f-opf myfile))
+;;(pretty-print (get-tit-aut-f-opf myfile))
 ;; (let* ((f "/home/mbc/projects/bookstore/test/content.opf.txt")
 ;;        (p (open-input-file f ))
 ;;        (astart (find-string-from-port? "<dc:creator" p ))
@@ -144,3 +146,19 @@
 ;;     (pretty-print title)
 ;;     (pretty-print author)
 ;;     ))
+
+(let* ((f "/home/mbc/Downloads/test.opf")
+       (p (open-input-file f ))
+       (tstart (find-string-from-port? "Title:" p ))
+       (title (read-text-line p))
+       (astart (find-string-from-port? "Author:" p ))
+       (author-pre (read-text-line p))
+       
+       (_ (close-port p))
+       )
+  (begin
+   (pretty-print (string-trim-both title))
+   (pretty-print (string-trim-both author))
+   (pretty-print (if (string= (substring (string-trim-both author) 0 3) "By ") (substring (string-trim-both author) 3 (string-length (string-trim-both author)))))
+   
+    ))

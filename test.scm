@@ -16,6 +16,7 @@
  	     #:use-module (srfi srfi-19)   ;; date time
 	     #:use-module (srfi srfi-1)  ;;list searching; delete-duplicates in list 
 	     #:use-module (ice-9 rdelim)
+	     #:use-module (ice-9 ftw) ;;scandir
 	     #:use-module (ice-9 i18n)   ;; internationalization
 	     #:use-module (ice-9 popen)
 	     #:use-module (ice-9 regex) ;;list-matches
@@ -52,28 +53,96 @@
 ;;expires 11/28/24
 (define my-write-url "https://objectstorage.us-ashburn-1.oraclecloud.com/p/f26Xz-Co-MMebq9K1EzuWwX2MVyX4XhMC0rcKtuaUkTTMxIyfFSb6DzgPEoL5nhp/n/idd2jj2zatqq/b/poctyr-bidbes/o/contags2.json")
 
-(define (my-last lst)
-  (if (null? (cdr lst))
-      (car lst)
-      (my-last (cdr lst))))
+(define config-dir "/home/mbc/.config/bookstore/")
+(define config-file "/home/mbc/.config/bookstore/config.json")
 
 
-(define libfile)
+(define base-dir "/home/mbc/temp/mylib/")
+(define db-dir (string-append base-dir "db/" ))
+(define withdraw-dir (string-append base-dir "withdraw/"))
+(define deposit-dir (string-append base-dir "deposit/"))
 
-(define (load-lib libfile)
+(define samples-dir "/home/mbc/projects/bookstore/samples/")
+(define pdf-src (string-append samples-dir "pdf/"))
+(define epub-src (string-append samples-dir "epub/"))
+(define txt-src (string-append samples-dir "txt/"))
+(define txt2-src (string-append samples-dir "txt2/"))
+(define json-src (string-append samples-dir "jsons/"))
+(define config-json (string-append samples-dir "configs/"))
+
+(define config-being-tested "file-local")
+;;file-local
+;;minio-local
+;;minio-remote
+;;oracles3
 
 
+(define (mod-config s)
+  (begin
+    (if (file-exists? config-file)(delete-file config-file))
+    (cond
+     ((string= s "file-local") (copy-file (string-append config-json "file-local.json") config-file))
+     ((string= s "minio-local") (copy-file (string-append config-json "minio-local.json") config-file))
+     ((string= s "minio-remote") (copy-file (string-append config-json "minio-remote.json") config-file))
+     ((string= s "oracles3") (copy-file (string-append config-json "oracles3.json") config-file))
+     )
+    (pretty-print (string-append "**modified config file for: " s))
+    ))
 
+
+(define (fake-init-db)
+  ;;by deleting existing files and  copying template files
+  ;;NOT using init process
+    (begin
+      (delete-file (string-append deposit-dir "*.*"))
+      (delete-file (string-append db-dir "*.*"))
+      (delete-file (string-append tmp-dir "*.*"))
+      (delete-file (string-append withdraw-dir "*.*"))
+      (copy-file (string-append json-src "books.json") db-dir)
+      (copy-file (string-append json-src "consuffix.json") db-dir)
+      (copy-file (string-append json-src "contags.json") db-dir)
+       (pretty-print "**fake-init-db completed"))
   )
+
+  (define (refresh-deposit-file-local)
+    (begin
+      (fake-init-db)
+      (copy-file (string-append txt-src "*.txt") deposit-dir)
+      (copy-file (string-append epub-src "*.epub") deposit-dir)
+      (copy-file (string-append pdf-src "*.pdf") deposit-dir)
+      (copy-file (string-append json-src "books.json") db-dir)
+      (copy-file (string-append json-src "consuffix.json") db-dir)
+      (copy-file (string-append json-src "contags.json") db-dir)
+      (pretty-print "**refresh-deposit-file-local completed")
+      ))
+
+(define (select-txt x)
+  ;;used with scandir to select .txt files
+  (let* ((dot (string-rindex x #\.))
+	 (ext (substring x (+ dot 1))))
+  (string= "txt" ext)))
+
 
 
 (define (main)
   (let* ((start-time (current-time time-monotonic))	 
+	 (_ (pretty-print (string-append "=====test suite begin: " (number->string (time-second start-time)) " ===========")))
+;;       ===================================================================================
 
-	 (stop-time (current-time time-monotonic))
-	 (elapsed-time (time-second (time-difference stop-time start-time)))
+	;; (_ (mod-config config-being-tested))
+	;; (_ (fake-init-db))
+
+	 ;;(_ (display (scandir deposit-dir select-txt)))
+	 ;;(_ (map delete-file (scandir deposit-dir select-txt)))
+	  (a (cp-files-in-dir "/home/mbc/projects/bookstore/samples/txt"  "txt" deposit-dir))
+	 ;;(a (copy-file "/home/mbc/projects/bookstore/samples/txt/A Book One by Jo Smith.txt" "/home/mbc/temp/mylib/deposit/aaa.txt"))
+	;; (a (cp-files-in-dir "/home/mbc/projects/bookstore/samples/txt"  "txt" deposit-dir))
+	 ;;	 (_ (pretty-print (myselect "sjdfksjd.epub")))
 	 
-	 )
+;;       ===================================================================================	 
+	 (stop-time (current-time time-monotonic))
+	 (_ (pretty-print (string-append "=====test suite end: " (number->string (time-second stop-time)) " ===========")))
+	 (elapsed-time (time-second (time-difference stop-time start-time))))
     (begin
       (display  a)
       

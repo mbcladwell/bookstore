@@ -39,6 +39,8 @@
 	     #:export (backup-json)
 	     #:export (delete-json)
 	     #:export (get-file-md5)
+	     #:export (del-files-in-dir)
+	     #:export (cp-files-in-dir)
 
 ;;testing
 	     #:export (get-json-from-bucket)
@@ -245,6 +247,27 @@
 	(system (string-append "mc cp " mcalias "/" bucket "/" id "." ext " '" withdraw-dir title "." ext "'" ))))
      ((string= target "oracles3") #f)))) 
 	 
+
+(define (del-files-in-dir dir ext)
+  ;;delete all files with the extension ext in the directory dir
+  (let* ((func (lambda (x) (let* ((dot (string-rindex x #\.))
+				  (ext2 (substring x (+ dot 1))))
+			     (string= ext ext2)) ))
+	 (all-files (scandir dir func))
+	 (files-w-dir (map (lambda (x) (string-append dir x )) all-files)))
+    (map delete-file files-w-dir )))
+
+(define (cp-files-in-dir dir ext dest-dir)
+  ;;copy all files with the extension ext in the directory dir to dest-dir
+  (let* ((func (lambda (x) (let* ((dot (string-rindex x #\.))
+				  (ext2 (substring x (+ dot 1))))
+			     (string= ext ext2)) ))
+	 (all-files (scandir dir func))
+	 (src-files-w-dir (map (lambda (x) (string-append dir "/" x )) all-files))
+	 (dest-files-w-dir (map (lambda (x) (string-append dest-dir "/" x )) all-files)))
+    (for-each copy-file src-files-w-dir dest-files-w-dir)))
+
+
 
 ;;compund list of new books:
 ;;

@@ -33,18 +33,25 @@
 	  (a2start (find-string-from-port? "<dc:creator" p2 ))
 	  (_ (skip-until '(#\>) p2))
 	  (author (read-string (- alength 13) p2))
+	  (author `(,author));;authors must be a list
 	  (t2start (find-string-from-port? "<dc:title>" p2 ))
 	  (title (read-string (- tlength 11) p2))
-	  (_ (close-port p2))
-       )
-     ;; (begin
-     ;;   (pretty-print (string-append "astart: " (number->string astart)))
-     ;;   (pretty-print (string-append "alength: " (number->string alength)))
-     ;;   (pretty-print (string-append "tstart: " (number->string tstart )))
-     ;;   (pretty-print (string-append  "tlength: " (number->string tlength)))
-     ;;   (pretty-print title)
-     ;;   (pretty-print author)
-     ;;   )
+	  (_ (close-port p2)))
+  `(,title ,author)))
+
+ (define (get-tit-aut-f-pdf f)
+   ;;f: input opf file
+   ;;output: '("title" "author")
+   (let* (;;(f "/home/mbc/projects/bookstore/test/content.opf.txt")
+	  (p (open-input-file f ))
+	  (tstart (find-string-from-port? "Title:" p ))
+	  (title (string-trim-both (read-text-line p)))
+	  (astart (find-string-from-port? "Author:" p ))
+	  (author-pre (string-trim-both (read-text-line p)))
+	  (author (if (string= (substring author-pre 0 3) "By ")
+		      (substring author-pre 3 (string-length (string-trim-both author-pre)))
+		      author-pre))
+	  (_ (close-port p)))
   `(,title ,author)))
 
 
@@ -62,14 +69,7 @@
  
 ;;unzip -p  Anarchy_\ The\ East\ India\ Company\,\ Corporate\ Violence\,\ and\ the\ Pillage\ of\ an\ Empire\,\ The\ -\ William\ Dalrymple.epub content.opf | grep ISBN
 
-(define (extract-opf-to-tmp epub-name)
-  ;;and return the /tmp filename
-  (let* ((tmpname (string-append (get-tmp-dir) (get-rand-file-name "content" "opf")))
-	 (command1 (string-append "unzip -p '" epub-name "' OEBPS/content.opf >" tmpname ))
-	 (_ (system command1))
-	 )
-    tmpname
-  ))
+
 
 
 

@@ -14,10 +14,13 @@
 	     #:use-module (ice-9 readline) ;;must sudo apt-get install libreadline-dev; guix package -i guile-readline
 	     #:use-module (bookstore suffix)
 	     #:use-module (bookstore utilities)
+	     #:use-module (bookstore env)
+	     #:use-module (bookstore epubs)
 	     #:export (get-title-authors-fname-ext)
 	     #:export (get-authors-as-string)
 	     #:export (get-authors-as-list)
-	     
+	     #:export (get-title-authors-f-pdf)
+	     #:export (get-title-authors-f-epub)
 	     )
 
 (define (get-authors-as-string lst str)
@@ -103,4 +106,38 @@
   `(,title ,auth-lst ,new-file-name ,fname ,ext) ))
 
 
+(define (get-title-authors-f-epub f)
+  ;;must mimic get-title-authors-fname-ext above
+  ;; return a list '(title '(authors) new-file-name old-file-name ext)
+  ;; f is file name only, not full path
+  ;; new-file-name is the file name with suffixes removed, but not relevant here
+  (let* ((ext "epub")
+	 (fuc (string-append  top-dir "/deposit/" f)) ;;fuc: file under consideration	 
+	 (tmpname (string-append (get-tmp-dir) (get-rand-file-name "content" "opf")))
+	 (command1 (string-append "unzip -p '" fuc "' OEBPS/content.opf >" tmpname ))
+	 (_ (system command1))
+	 (lst (get-tit-aut-f-opf tmpname));; '(tit auth)
+	 (title (car lst))
+	 (auth-lst (cadr lst))
+	 (new-file-name (string-append "'" title "." ext "'"))
+	 )
+ `(,title ,auth-lst ,new-file-name ,f ,ext)))
 
+
+
+ (define (get-title-authors-f-pdf f)
+  ;;must mimic get-title-authors-fname-ext above
+  ;; return a list '(title '(authors) new-file-name old-file-name ext)
+  ;; f is file name only, not full path
+  ;; new-file-name is the file name with suffixes removed, but not relevant here
+ (let* ((ext "pdf")
+	 (fuc (string-append  top-dir "/deposit/" f)) ;;fuc: file under consideration	 
+	 (tmpname (string-append (get-tmp-dir) (get-rand-file-name "pdfmeta" "txt")))
+	 (command1 (string-append "pdfinfo '" pdf-name "' >" tmpname ))
+	 (_ (system command1))
+	 (lst (get-tit-aut-f-pdf tmpname));; '(tit auth)
+	 (title (car lst))
+	 (auth-lst (cadr lst))
+	 (new-file-name (string-append "'" title "." ext "'"))
+	 )
+ `(,title ,auth-lst ,new-file-name ,f ,ext)))

@@ -213,7 +213,7 @@
 
 (define (delete-json resource)
   (cond
-   ((string= target "filelocal") (system (string-append "rm " (get-books-json-fn))))
+   ((string= target "filelocal") (delete-file (get-books-json-fn)))
    ((string= target "miniolocal")(system (string-append "mc rm " mcalias "/" bucket "/books.json" )))
    ((string= target "oracles3") #f)) 
   )

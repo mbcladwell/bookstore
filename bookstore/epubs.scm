@@ -12,9 +12,10 @@
 	     #:use-module (sxml ssax input-parse)
 	     #:use-module (bookstore utilities)
 	     #:use-module (bookstore env)
+	     #:use-module (bookstore titaut)
 	     #:export (get-tit-aut-f-opf
 		       extract-opf-to-tmp
-		       
+		       get-tit-aut-f-pdf
 		       )
 	     )
 
@@ -40,17 +41,18 @@
   `(,title ,author)))
 
  (define (get-tit-aut-f-pdf f)
-   ;;f: input opf file
+   ;;f: input meta-.txt file
    ;;output: '("title" "author")
    (let* (;;(f "/home/mbc/projects/bookstore/test/content.opf.txt")
 	  (p (open-input-file f ))
 	  (tstart (find-string-from-port? "Title:" p ))
 	  (title (string-trim-both (read-text-line p)))
 	  (astart (find-string-from-port? "Author:" p ))
-	  (author-pre (string-trim-both (read-text-line p)))
-	  (author (if (string= (substring author-pre 0 3) "By ")
-		      (substring author-pre 3 (string-length (string-trim-both author-pre)))
-		      author-pre))
+	  (author-pre1 (string-trim-both (read-text-line p)))
+	  (author-pre2 (if (string= (substring author-pre1 0 3) "By ")
+		      (substring author-pre1 3 (string-length (string-trim-both author-pre1)))
+		      author-pre1))
+	  (author (get-authors-as-list author-pre2))
 	  (_ (close-port p)))
   `(,title ,author)))
 

@@ -26,8 +26,8 @@
   ;;c: contents of file
   (let* ((config-file-name (string-append (getenv "HOME") "/.config/bookstore/config.json"))
 	 (dummy (if (access? config-file-name F_OK)
-		    (system (string-append "rm " config-file-name))		    
-		    (system (string-append "mkdir " (getenv "HOME") "/.config/bookstore"))))
+		    (delete-file config-file-name)		    
+		    (mkdir (string-append (getenv "HOME") "/.config/bookstore"))))
 	 (p  (open-output-file config-file-name)))
     (begin
       (put-string p content)

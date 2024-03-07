@@ -27,6 +27,7 @@
 	     #:export (get-consuffix-fn)
 	     #:export (get-backup-prefix)
 	     #:export (get-tmp-dir)
+	     #:export (get-db-dir)
 	     #:export (mcalias)
 	    ;; #:export ()
 	     )

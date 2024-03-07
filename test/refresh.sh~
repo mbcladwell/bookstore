@@ -1,5 +1,0 @@
-#!/bin/sh
-
-rm /home/mbc/temp/mylib/deposit/*.*
-rm /home/mbc/temp/mylib/lib/*.*
-cp /home/mbc/temp/library/archive/*.* cp /home/mbc/temp/mylib/deposit 

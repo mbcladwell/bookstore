@@ -1,6 +1,6 @@
-#! /gnu/store/qlmpcy5zi84m6dikq3fnx5dz38qpczlc-guile-3.0.8/bin/guile \
--e main -s
-!#
+;;#! /gnu/store/qlmpcy5zi84m6dikq3fnx5dz38qpczlc-guile-3.0.8/bin/guile \
+;;-e main -s
+;;!#
 
 ;;  (add-to-load-path "/home/mbc/projects/bookstore/test")
 ;;  (add-to-load-path "/home/mbc/.guix-profile/share/guile/site/3.0")
@@ -61,6 +61,7 @@
 (define db-dir (string-append base-dir "db/" ))
 (define withdraw-dir (string-append base-dir "withdraw/"))
 (define deposit-dir (string-append base-dir "deposit/"))
+(define tmp-dir (string-append base-dir "tmp/"))
 
 (define samples-dir "/home/mbc/projects/bookstore/samples/")
 (define pdf-src (string-append samples-dir "pdf/"))
@@ -94,34 +95,51 @@
   ;;by deleting existing files and  copying template files
   ;;NOT using init process
     (begin
-      (delete-file (string-append deposit-dir "*.*"))
-      (delete-file (string-append db-dir "*.*"))
-      (delete-file (string-append tmp-dir "*.*"))
-      (delete-file (string-append withdraw-dir "*.*"))
-      (copy-file (string-append json-src "books.json") db-dir)
-      (copy-file (string-append json-src "consuffix.json") db-dir)
-      (copy-file (string-append json-src "contags.json") db-dir)
-       (pretty-print "**fake-init-db completed"))
+      (del-files-in-dir db-dir  "json" )
+      (del-files-in-dir db-dir  "txt" )
+      (del-files-in-dir db-dir  "epub" )
+      (del-files-in-dir deposit-dir  "txt" )
+      (del-files-in-dir deposit-dir  "pdf" )
+      (del-files-in-dir deposit-dir  "epub" )
+      (del-files-in-dir tmp-dir  "txt" )
+      (del-files-in-dir tmp-dir  "opf" )
+      (del-files-in-dir withdraw-dir  "epub" )
+      (del-files-in-dir withdraw-dir  "txt" )
+      (del-files-in-dir withdraw-dir  "pdf" )
+
+      (cp-files-in-dir json-src  "json" db-dir)
+      (pretty-print "**fake-init-db completed"))
   )
 
   (define (refresh-deposit-file-local)
     (begin
       (fake-init-db)
-      (copy-file (string-append txt-src "*.txt") deposit-dir)
-      (copy-file (string-append epub-src "*.epub") deposit-dir)
-      (copy-file (string-append pdf-src "*.pdf") deposit-dir)
-      (copy-file (string-append json-src "books.json") db-dir)
-      (copy-file (string-append json-src "consuffix.json") db-dir)
-      (copy-file (string-append json-src "contags.json") db-dir)
+      (cp-files-in-dir txt-src  "txt" deposit-dir)
+      (cp-files-in-dir epub-src "epub" deposit-dir)
+      (cp-files-in-dir pdf-src  "pdf" deposit-dir)
       (pretty-print "**refresh-deposit-file-local completed")
       ))
 
-(define (select-txt x)
-  ;;used with scandir to select .txt files
-  (let* ((dot (string-rindex x #\.))
-	 (ext (substring x (+ dot 1))))
-  (string= "txt" ext)))
 
+(define (withdraw-test-files)
+  (let* ((b1-pre (get-book-with-id "a18d91586c4c233105512531872823aa"))
+	 (b1 (car b1-pre))
+	 (b2-pre (get-book-with-id "1f5eb8e0bd80005b767e7dd5e14d7afb"))
+	 (b2 (car b2-pre))
+	 (b3-pre (get-book-with-id "993b619c095ad72a3e0966001b0cf6ba"))
+	 (b3 (car b3-pre))
+	 )
+    (begin (move-to-withdraw b1)
+	   (move-to-withdraw b2)
+	   (move-to-withdraw b3)
+	   (pretty-print "**withdraw test files completed")
+	   )))
+
+
+(define (test-deposit)
+  (begin
+    (process-deposit))
+  )
 
 
 (define (main)
@@ -130,15 +148,16 @@
 ;;       ===================================================================================
 
 	;; (_ (mod-config config-being-tested))
-	;; (_ (fake-init-db))
-
+;;	 (_ (fake-init-db))
+	 (_ (refresh-deposit-file-local))
+	 (_ (process-deposit))
+	;; (a (get-book-with-id "a18d91586c4c233105512531872823aa"))
+	 (a (withdraw-test-files))
 	 ;;(_ (display (scandir deposit-dir select-txt)))
 	 ;;(_ (map delete-file (scandir deposit-dir select-txt)))
-	  (a (cp-files-in-dir "/home/mbc/projects/bookstore/samples/txt"  "txt" deposit-dir))
-	 ;;(a (copy-file "/home/mbc/projects/bookstore/samples/txt/A Book One by Jo Smith.txt" "/home/mbc/temp/mylib/deposit/aaa.txt"))
-	;; (a (cp-files-in-dir "/home/mbc/projects/bookstore/samples/txt"  "txt" deposit-dir))
-	 ;;	 (_ (pretty-print (myselect "sjdfksjd.epub")))
-	 
+	 ;; (a (fake-init-db))
+
+	  
 ;;       ===================================================================================	 
 	 (stop-time (current-time time-monotonic))
 	 (_ (pretty-print (string-append "=====test suite end: " (number->string (time-second stop-time)) " ===========")))
@@ -154,20 +173,3 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; guix environment --network --expose=/etc/ssl/certs/  --manifest=manifest.scm
-;; guile -e main -s ./conman.scm 7 10
-;; 7 days (&reldate)
-;; max 10 summaries (&retmax)
-
-;;guix environment --pure --network --expose=/etc/ssl/certs/  --manifest=manifest.scm -- ./conman.scm 7 2
-
-;; /gnu/store/0w76khfspfy8qmcpjya41chj3bgfcy0k-guile-3.0.4/bin/guile
-
-;; https://pubmed.ncbi.nlm.nih.gov/"
-;; scp ~/projects/conman/conman.scm mbc@192.168.1.11:/home/mbc/projects/conman/conman.scm
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

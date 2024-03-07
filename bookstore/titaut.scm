@@ -133,7 +133,7 @@
  (let* ((ext "pdf")
 	 (fuc (string-append  top-dir "/deposit/" f)) ;;fuc: file under consideration	 
 	 (tmpname (string-append (get-tmp-dir) (get-rand-file-name "pdfmeta" "txt")))
-	 (command1 (string-append "pdfinfo '" pdf-name "' >" tmpname ))
+	 (command1 (string-append "pdfinfo '" fuc "' >" tmpname ))
 	 (_ (system command1))
 	 (lst (get-tit-aut-f-pdf tmpname));; '(tit auth)
 	 (title (car lst))

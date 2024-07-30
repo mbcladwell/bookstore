@@ -6,3 +6,11 @@ to make a backup:
 get-json-from-bucket utilities 115,6
 sometime character sometimes string
 
+/bookstore/store.scm:224: (_ (system (string-append "mkdir " top-dir " " db-dir " " backup-dir " " deposit-dir " " withdraw-dir " " tmp-dir )))
+
+top-dir                       local/remote
+   |-----db-dir               depends
+   |-----backup-dir           local
+   |-----deposit-dir          local
+   |-----withdraw-dir         local
+   |-----tmp-dir              local

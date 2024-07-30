@@ -40,7 +40,7 @@
      (display "  |  _ < / _ \\ / _ \\| |/ /\\___ \\| __/ _ \\| '__/ _ \\\n")
      (display "  | |_) | (_) | (_) |   < ____) | || (_) | | |  __/\n")
      (display "  |____/ \\___/ \\___/|_|\\_\\_____/ \\__\\___/|_|  \\___|\n")
-     (display "  ~Urbit compatible, Appocolypse ready  \n\n")
+     (display "  P2P enabled, Appocolypse ready  \n\n")
      (display (string-append "Library: " (get-books-json-fn) "\n\n"))
      ))
 

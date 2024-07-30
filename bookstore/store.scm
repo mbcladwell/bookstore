@@ -57,7 +57,7 @@
   ;; the original and dest filename is needed to rename the file
   ;; the suffix removed file name will be used to rename the book when withdrawn
   (let* (	 
-	 (fuc (string-append  top-dir "/deposit/" orig-fname)) ;;fuc: file under consideration	 
+	 (fuc (string-append  *top-dir* "/deposit/" orig-fname)) ;;fuc: file under consideration	 
 	 (md5 (get-file-md5 fuc))       
 ;;	 (out (string-append "Original File: " orig-fname "\n"))
 ;;	 (out (string-append out "md5: " md5  "\n"))
@@ -96,12 +96,12 @@
 ;; 	 (auth-lst (cadr lst))
 ;; 	 (auth-str (get-authors-as-string auth-lst "") )
 ;; 	;; (md5-file (get-rand-file-name "/var/tmp/md5" "txt"))
-;; 	;; (command (string-append "md5sum \"" top-dir "deposit/" orig-fname "\" > " md5-file))
+;; 	;; (command (string-append "md5sum \"" *top-dir* "deposit/" orig-fname "\" > " md5-file))
 ;; 	;; (dummy (system command))
 ;; 	;; (md5-port  (open-input-file md5-file))
 ;; 	 ;; (md5 (car (string-split (read-line md5-port) #\space)))
 
-;; 	 (fuc (string-append  top-dir "/deposit/" orig-fname)) ;;fuc: file under consideration	 
+;; 	 (fuc (string-append  *top-dir* "/deposit/" orig-fname)) ;;fuc: file under consideration	 
 ;; 	 (md5 (get-file-md5 fuc))       
 ;; 	 (out (string-append out "Title: " title  "\n"))
 ;; 	 (out (string-append out "Author(s): " auth-str  "\n"))
@@ -135,8 +135,8 @@
   ;;note that a compund list is being processed '(old-fname new-fname '(list of attributes))
   ;;deposit directory is assumed to be local - even when S3 used
   (let* (
-	 (dummy (pretty-print  (string-append top-dir "/deposit" )))
-	 (all-files (cddr (scandir (string-append top-dir "/deposit" ))))
+	 (dummy (pretty-print  (string-append *top-dir* "/deposit" )))
+	 (all-files (cddr (scandir (string-append *top-dir* "/deposit" ))))
 	 (files-deposit? (if (= (length all-files) 0) #f #t ))
 	 (message (if files-deposit?
 		      (let* (;;make backup of books.json
@@ -153,7 +153,7 @@
 			      ;; (content-new-only (scm->json-string `(("books" . ,new-lst-only))))
 			    (gs-name (string-append "NEW-" (date->string  (current-date) "~Y~m~d~H~M~S-") "books.json"))
 			       ;;need to save; what about contags? consuffix?
-;;			       (dummy (make-json-for-gs new-lst-only top-dir));;for graph-store
+;;			       (dummy (make-json-for-gs new-lst-only *top-dir*));;for graph-store
 			    (dummy (recurse-move-files new-books-only-lst))
 ;;working on this
 			       ;; (_ (pretty-print (string-append "new-books-only-lst: " new-books-only-lst)))
@@ -250,7 +250,7 @@
 	 (mcalias (readline "\nEnter mc alias (in ~/.mc/config.json): "))
 	 (paread (readline "\nEnter pre-authorized read code: "))
 	 (pawrite (readline "\nEnter pre-authorized write code: "))
-	 (config-json (scm->json-string `(("target" . "oracles3")("top-dir" . "")("base-uri" . ,base-uri)("namespace" . ,namespace)("bucket" . ,bucket)("paread" . ,paread)("pawrite" . ,pawrite)("mcalias" . ,mcalias))))
+	 (config-json (scm->json-string `(("target" . "oracles3")("top-dir" . "")("base-uri" . ,base-uri)("namespace" . ,namespace)("bucket" . ,bucket)("paread" . ,paread)("pawrite" . ,pawrite)("mcalias" . ,mcalias)("gpg-key" . "babweb@build-a-bot.biz"))))
 	 
 	 (db-json (get-db-json))
 	 (tags-json (init-tags-json))
@@ -277,7 +277,7 @@
   (let* ((base-uri "http://127.0.0.1:9000")
 	 (bucket "bookstore")
 	 (withdraw-dir "withdraw")
-	 (config-json (scm->json-string `(("target" . "miniolocal")("top-dir" . "")("base-uri" . ,base-uri)("namespace" . "")("bucket" . ,bucket)("withdraw" . ,withdraw-dir)("paread" . "")("pawrite" . "")("mcalias" . "myminio"))))
+	 (config-json (scm->json-string `(("target" . "miniolocal")("top-dir" . "")("base-uri" . ,base-uri)("namespace" . "")("bucket" . ,bucket)("withdraw" . ,withdraw-dir)("paread" . "")("pawrite" . "")("mcalias" . "myminio")("gpg-key" . "babweb@build-a-bot.biz"))))
 	 (db-json (get-db-json))
 	 (tags-json (init-tags-json))
 	 (suffixes-json (get-suffixes-json))

@@ -5,7 +5,7 @@
 ;;  (add-to-load-path "/home/mbc/projects/bookstore/test")
 ;;  (add-to-load-path "/home/mbc/.guix-profile/share/guile/site/3.0")
 ;;  (add-to-load-path "/home/mbc/.guix-profile/share/2.2")
-  (add-to-load-path "/home/mbc/projects/bookstore")
+;;  (add-to-load-path "/home/mbc/projects/bookstore")
  (define-module (test)
  #:use-module (web client)
 	     #:use-module (web response)
@@ -43,10 +43,11 @@
 	     #:use-module (bookstore db)
 	     #:use-module (bookstore menus)
 	     #:use-module (bookstore junk)
+	     #:export (main
+
+		       )
 	     )
 
-;;guix shell --container --network --expose=/etc/ssl/certs=/etc/ssl/certs guile guile-json guile-readline guile-gnutls -- guile -L . ./test.scm
-;;guix shell --container --pure -N -P -m manifest.scm -- guile ./test.scm
 
 (define my-read-url "https://objectstorage.us-ashburn-1.oraclecloud.com/p/6eWiHuS3TGffX_cG-Mnz7RcBtcvHeiIBHDt4TVwErO_TSSYX_Avw-9nLG1hCZVZ1/n/idd2jj2zatqq/b/poctyr-bidbes/o/contags.json")
 
@@ -142,17 +143,44 @@
   )
 
 
-(define (main)
+
+
+(define (get-rev-md5-name file-name)
+  (string-reverse (get-file-md5 file-name)))
+
+   
+
+(define (test-encrypt-decrypt)
+;;clean out bookstore/tmp which is where files will be generated
+  (let* ((file-name "A Book One by Jo Smith.txt")
+	 (src-dir "/home/mbc/projects/bookstore/samples/txt")
+	 (dest-dir "/home/mbc/projects/bookstore/tmp")
+	 (src-file (string-append src-dir "/" file-name))
+	 (dest-file (string-append dest-dir "/" file-name))	 
+	 (_ (copy-file src-file dest-file))
+	 (new-file (encrypt-file dest-file dest-dir))
+	 (_ (decrypt-file new-file "/home/mbc/projects/bookstore/tmp/abc.txt"))   
+	 )
+    "completed test-encrypt-decrypt\n")
+    )
+
+;;guix shell --container --network --expose=/etc/ssl/certs=/etc/ssl/certs guile guile-json guile-readline guile-gnutls -- guile -L . ./test.scm
+;;guix shell --container --pure -N -P -m manifest.scm -- guile ./test.scm
+;;guix shell -m manifest.scm -- guile -L . -e '(test)' -s  ./test.scm
+
+
+(define (main args)
   (let* ((start-time (current-time time-monotonic))	 
 	 (_ (pretty-print (string-append "=====test suite begin: " (number->string (time-second start-time)) " ===========")))
 ;;       ===================================================================================
-
 	;; (_ (mod-config config-being-tested))
 ;;	 (_ (fake-init-db))
-	 (_ (refresh-deposit-file-local))
-	 (_ (process-deposit))
+;;	 (_ (refresh-deposit-file-local))
+;;	 (_ (process-deposit))
 	;; (a (get-book-with-id "a18d91586c4c233105512531872823aa"))
-	 (a (withdraw-test-files))
+	 ;;	 (a (withdraw-test-files))
+	 (a (test-encrypt-decrypt))
+	 ;;(a (string-reverse (get-file-md5 "/home/mbc/projects/bookstore/samples/txt/A Book One by Jo Smith.txt")))
 	 ;;(_ (display (scandir deposit-dir select-txt)))
 	 ;;(_ (map delete-file (scandir deposit-dir select-txt)))
 	 ;; (a (fake-init-db))
@@ -169,7 +197,7 @@
     )))
    
 
-(main)
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

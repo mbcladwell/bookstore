@@ -25,27 +25,43 @@
 	     #:use-module (bookstore env)
 	     #:use-module (bookstore suffix)
 	     #:use-module (json)
-	     #:export (send-json-to)
-	     #:export (send-json-to-bucket)
-	     #:export (find-occurences-in-string)
-	     #:export (any-not-false?)
-	     #:export (recurse-move-files)
-	     #:export (make-backup-file-name)
-;;	     #:export (make-backup)
-	     #:export (get-rand-file-name)
-	     #:export (get-file-extension)
-	     #:export (move-to-withdraw)
-	     #:export (get-json)
-	     #:export (backup-json)
-	     #:export (delete-json)
-	     #:export (get-file-md5)
-	     #:export (del-files-in-dir)
-	     #:export (cp-files-in-dir)
-
+	     #:export (send-json-to
+		       send-json-to-bucket
+		       find-occurences-in-string
+		       any-not-false?
+		       recurse-move-files
+		       make-backup-file-name
+		       ;;	     make-backup
+		       get-rand-file-name
+		       get-file-extension
+		       move-to-withdraw
+		       get-json
+		       backup-json
+		       delete-json
+		       get-file-md5
+		       del-files-in-dir
+		       cp-files-in-dir
+		       encrypt-file
+		       decrypt-file
 ;;testing
-	     #:export (get-json-from-bucket)
+		       get-json-from-bucket
+		       ))
 
-	     )
+
+(define nonce-chars (list->vector (string->list "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789")))
+
+(define (get-nonce n s)
+  "n is the length of the nonce
+   s is the nonce itself (a string)
+   therefore to use: (get-nonce 20 "")"
+ (if (= n (string-length s))
+     s
+     (begin
+       (set! s (string-append s (string (vector-ref nonce-chars (inexact->exact (truncate (* 56 (random:uniform (seed->random-state (time-nanosecond (current-time))))) ))))))
+       (usleep 1)
+       (get-nonce n s))))
+
+
 
 (define (get-rand-file-name pre suff)
   (string-append pre "-" (number->string (random 10000000000000000000000)) "." suff))
@@ -57,16 +73,16 @@
 (define (move-file-deposit->storage old new)
   ;;old name, new name
   (cond
-   ((string= target "filelocal")
+   ((string= *target* "filelocal")
     (let* ((old-fname (string-append deposit "'" old "'"))
 	 (new-fname (string-append (get-db-dir)  new))
 	 (command (string-append "mv " old-fname " " new-fname)))
       (system command )))
-   ((string= target "miniolocal")
+   ((string= *target* "miniolocal")
     (begin
    ;;   (pretty-print (string-append "mc mv " deposit "/'" old "' " mcalias "/" bucket "/" new))
     (system (string-append "mc mv " deposit "/'" old "' " mcalias "/" bucket "/" new))))
-   ((string= target "oracles3")
+   ((string= *target* "oracles3")
     #f
     )))
 
@@ -145,9 +161,9 @@
   ;; resource: the file or uri (as assembled by env.scm)
   ;; 'target' will determine whether to treat resource as file or uri
   (cond
-   ((string= target "filelocal") (get-json-from-file resource))
-   ((string= target "miniolocal") (get-json-from-bucket resource))
-   ((string= target "oracles3") '(get-json-from-bucket resource)))
+   ((string= *target* "filelocal") (get-json-from-file resource))
+   ((string= *target* "miniolocal") (get-json-from-bucket resource))
+   ((string= *target* "oracles3") '(get-json-from-bucket resource)))
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -195,9 +211,9 @@
   ;; data must be list, though this is send-json...!!!
   ;; fn is backup file name if this is a backup
   (cond
-   ((string= target "filelocal") (send-json-to-file resource data fn))
-   ((string= target "miniolocal") (send-json-to-bucket resource data fn))
-   ((string= target "oracles3") '(send-json-to-bucket resource data fn)))
+   ((string= *target* "filelocal") (send-json-to-file resource data fn))
+   ((string= *target* "miniolocal") (send-json-to-bucket resource data fn))
+   ((string= *target* "oracles3") '(send-json-to-bucket resource data fn)))
   )
 
 
@@ -213,9 +229,9 @@
 
 (define (delete-json resource)
   (cond
-   ((string= target "filelocal") (delete-file (get-books-json-fn)))
-   ((string= target "miniolocal")(system (string-append "mc rm " mcalias "/" bucket "/books.json" )))
-   ((string= target "oracles3") #f)) 
+   ((string= *target* "filelocal") (delete-file (get-books-json-fn)))
+   ((string= *target* "miniolocal")(system (string-append "mc rm " mcalias "/" bucket "/books.json" )))
+   ((string= *target* "oracles3") #f)) 
   )
 
 (define (find-occurences-in-string query the-string)
@@ -240,12 +256,12 @@
 	 (ext (assoc-ref book "ext"))
 	 (title (assoc-ref book "title")))
     (cond
-     ((string= target "filelocal") (system (string-append "cp " (get-db-dir) id "." ext " '" withdraw-dir title "." ext "'")))
-     ((string= target "miniolocal")
+     ((string= *target* "filelocal") (system (string-append "cp " (get-db-dir) id "." ext " '" withdraw-dir title "." ext "'")))
+     ((string= *target* "miniolocal")
       (begin
 	(pretty-print (string-append "mc cp " mcalias "/" bucket "/" id "." ext " '" withdraw-dir title "." ext "'" ))
 	(system (string-append "mc cp " mcalias "/" bucket "/" id "." ext " '" withdraw-dir title "." ext "'" ))))
-     ((string= target "oracles3") #f)))) 
+     ((string= *target* "oracles3") #f)))) 
 	 
 
 (define (del-files-in-dir dir ext)
@@ -266,6 +282,21 @@
 	 (src-files-w-dir (map (lambda (x) (string-append dir "/" x )) all-files))
 	 (dest-files-w-dir (map (lambda (x) (string-append dest-dir "/" x )) all-files)))
     (for-each copy-file src-files-w-dir dest-files-w-dir)))
+
+(define (encrypt-file in-file dest-dir)
+  (let* ((out-file (string-append dest-dir "/" (get-nonce 30 "")))
+	 (command (string-append "gpg --output " out-file " --recipient " *gpg-key* " --encrypt '" in-file "'"))
+	 )
+  (begin
+    (system command)
+    (delete-file in-file)
+    out-file
+    )))
+
+(define (decrypt-file in-file file-name)
+    (begin
+	 (system (string-append "gpg --output " file-name " --decrypt " in-file))
+	 (delete-file in-file)))
 
 
 

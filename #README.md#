@@ -5,9 +5,9 @@ Urbit friendly library application
 
 Directory layout is the same regarless of storage technology
 
-<working-dir>/bookstore  
+<top-dir>/bookstore  
 	              contains books.json, contags.json, consuffix.json
-<working-dir>/
+<top-dir>/
 
 1. local directory
 2. local minio
